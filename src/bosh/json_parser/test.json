@@ -1,0 +1,22 @@
+{
+    "test": "This is a test JSON file for the JSON parser.",
+    "arr": [1, 2, 3, 4, 5],
+    "nested": {
+        "key1": "value1",
+        "key2": "value2"
+    },
+    "boolean": true,
+    "null_value": null,
+    "arr2": [
+        {"id": 1, "name": "Alice"},
+        {"id": 2, "name": "Bob"},
+        {"id": 3, "name": "Charlie"}
+    ],
+    "obj": {
+        "nested_arr": [10, 20, 30],
+        "nested_obj": {
+            "inner_key": "inner_value"
+        }
+    },
+    "arrarr": [[1, 2], [3, 4], [5, 6]]
+}
