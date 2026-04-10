@@ -16,5 +16,5 @@ dependencies = [
 package = true
 
 [project.scripts]
-main = "bosh.main.main:main"
-test = "bosh.test.test:test"
+main = "main.main:main"
+test = "test.test:test"
