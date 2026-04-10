@@ -1,5 +1,5 @@
-def main():
+def test():
     print("Testing! beep boop!")
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__test__":
+    test()
