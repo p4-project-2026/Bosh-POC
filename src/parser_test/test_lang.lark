@@ -17,7 +17,7 @@
     |   andexpr "&&" | " && " | " and " eqexpr -> and 
 
 ?eqexpr:relexpr
-    |  eqexpr "==" | " == " | " equals " relexpr
+    |  eqexpr "==" | " == " | " equals " relexpr -> eq
 
 
 ?relexpr: plusexpr
@@ -40,7 +40,7 @@
 
 
 ?unaryexpr: accessexpr
-    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unaryexpr
+    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unaryexpr -> not
 
 ?accessexpr: term
 
