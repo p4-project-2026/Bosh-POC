@@ -1,0 +1,60 @@
+?start: program
+
+?program: stmt "."?
+
+?stmt: generalstsmt
+
+?generalstsmt: stmt _SEP stmt -> stmt
+    |IDENT " is " expr -> asign
+    |expr
+
+?expr: orexpr
+
+?orexpr: andexpr
+    |   orexpr  "||" | " || " | " or " andexpr -> or
+
+?andexpr: eqexpr
+    |   andexpr "&&" | " && " | " and " eqexpr -> and 
+
+?eqexpr:relexpr
+    |  eqexpr "==" | " == " | " equals " relexpr
+
+
+?relexpr: plusexpr
+    |   relexpr ("!=" |" != " | " not equals ") plusexpr  -> neq
+    |   relexpr (">" | " > " | " greater than ") plusexpr   ->  gt
+    |   relexpr ("<" | " < " | " less than ") plusexpr    -> lt
+    |   relexpr (">=" | " >= " | " greater or equal ") plusexpr  -> gte
+    |   relexpr ( "<=" | " <= " | " less or equal ") plusexpr   -> lte
+
+?plusexpr: multexpr
+    |   plusexpr (" + " | "+" | " plus ") multexpr -> plus
+    |   plusexpr (" - " | "-" | " minus ") multexpr   -> minus
+    
+
+?multexpr:unaryexpr
+    |   multexpr (" * " | "*" | " times ") unaryexpr -> mult
+    |   multexpr (" / " |"/" | " divided by ") unaryexpr -> div
+    |   multexpr (" % " | " mod ") unaryexpr -> mod
+
+
+
+?unaryexpr: accessexpr
+    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unaryexpr
+
+?accessexpr: term
+
+?term:IDENT
+    | NUM
+    | STRING        
+    | "true"        -> true
+    | "false"       -> false
+    | "null"        -> null
+
+_SEP: "." " "| (" "* _NL)+ | "." (" "* _NL)
+
+
+%import common.NEWLINE -> _NL
+%import common.INT -> NUM
+%import common.ESCAPED_STRING -> STRING
+IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
