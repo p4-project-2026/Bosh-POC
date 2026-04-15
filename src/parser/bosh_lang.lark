@@ -1,6 +1,6 @@
 ?start: program
 
-?program: stmt "."?
+program: stmt "."?
 
 ?stmt: generalstsmt
 
@@ -19,7 +19,6 @@
 ?eqexpr:relexpr
     |  eqexpr "==" | " == " | " equals " relexpr -> eq
 
-
 ?relexpr: plusexpr
     |   relexpr ("!=" |" != " | " not equals ") plusexpr  -> neq
     |   relexpr (">" | " > " | " greater than ") plusexpr   ->  gt
@@ -31,13 +30,10 @@
     |   plusexpr (" + " | "+" | " plus ") multexpr -> plus
     |   plusexpr (" - " | "-" | " minus ") multexpr   -> minus
     
-
 ?multexpr:unaryexpr
     |   multexpr (" * " | "*" | " times ") unaryexpr -> mult
     |   multexpr (" / " |"/" | " divided by ") unaryexpr -> div
     |   multexpr (" % " | " mod ") unaryexpr -> mod
-
-
 
 ?unaryexpr: accessexpr
     | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unaryexpr -> not
@@ -52,7 +48,6 @@
     | "null"        -> null
 
 _SEP: "." " "| (" "* _NL)+ | "." (" "* _NL)
-
 
 %import common.NEWLINE -> _NL
 %import common.INT -> NUM
