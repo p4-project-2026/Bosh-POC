@@ -2,43 +2,43 @@
 
 program: stmt "."?
 
-?stmt: generalstsmt
+?stmt: general_stsmt
 
-?generalstsmt: stmt _SEP stmt -> stmt
+?general_stsmt: stmt _SEP stmt -> stmt
     |IDENT " is " expr -> asign
     |expr
 
-?expr: orexpr
+?expr: or_expr
 
-?orexpr: andexpr
-    |   orexpr  "||" | " || " | " or " andexpr -> or
+?or_expr: and_expr
+    |   or_expr  "||" | " || " | " or " and_expr -> or
 
-?andexpr: eqexpr
-    |   andexpr "&&" | " && " | " and " eqexpr -> and 
+?and_expr: eqexpr
+    |   and_expr "&&" | " && " | " and " eq_expr -> and 
 
-?eqexpr:relexpr
-    |  eqexpr "==" | " == " | " equals " relexpr -> eq
+?eq_expr:relexpr
+    |  eq_expr "==" | " == " | " equals " relexpr -> eq
 
-?relexpr: plusexpr
-    |   relexpr ("!=" |" != " | " not equals ") plusexpr  -> neq
-    |   relexpr (">" | " > " | " greater than ") plusexpr   ->  gt
-    |   relexpr ("<" | " < " | " less than ") plusexpr    -> lt
-    |   relexpr (">=" | " >= " | " greater or equal ") plusexpr  -> gte
-    |   relexpr ( "<=" | " <= " | " less or equal ") plusexpr   -> lte
+?rel_expr: plusexpr
+    |   rel_expr ("!=" |" != " | " not equals ") plusexpr  -> neq
+    |   rel_expr (">" | " > " | " greater than ") plusexpr   ->  gt
+    |   rel_expr ("<" | " < " | " less than ") plusexpr    -> lt
+    |   rel_expr (">=" | " >= " | " greater or equal ") plusexpr  -> gte
+    |   rel_expr ( "<=" | " <= " | " less or equal ") plusexpr   -> lte
 
-?plusexpr: multexpr
-    |   plusexpr (" + " | "+" | " plus ") multexpr -> plus
-    |   plusexpr (" - " | "-" | " minus ") multexpr   -> minus
+?plus_expr: multexpr
+    |   plus_expr (" + " | "+" | " plus ") multexpr -> plus
+    |   plus_expr (" - " | "-" | " minus ") multexpr   -> minus
     
-?multexpr:unaryexpr
-    |   multexpr (" * " | "*" | " times ") unaryexpr -> mult
-    |   multexpr (" / " |"/" | " divided by ") unaryexpr -> div
-    |   multexpr (" % " | " mod ") unaryexpr -> mod
+?mult_expr:unaryexpr
+    |   mult_expr (" * " | "*" | " times ") unaryexpr -> mult
+    |   mult_expr (" / " |"/" | " divided by ") unaryexpr -> div
+    |   mult_expr (" % " | " mod ") unaryexpr -> mod
 
-?unaryexpr: accessexpr
-    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unaryexpr -> not
+?unary_expr: accessexpr
+    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unary_expr -> not
 
-?accessexpr: term
+?access_expr: term
 
 ?term:IDENT
     | NUM
