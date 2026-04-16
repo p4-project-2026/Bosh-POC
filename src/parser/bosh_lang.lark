@@ -2,9 +2,9 @@
 
 program: stmt "."?
 
-?stmt: general_stsmt
+?stmt: general_stmt
 
-?general_stsmt: stmt _SEP stmt -> stmt
+?general_stmt: stmt _SEP stmt -> stmt
     |IDENT _WS "is" _WS expr -> asign
     | ("say" | "print" | "output") _WS expr -> print
     | ("return") _WS expr -> return
@@ -14,13 +14,13 @@ program: stmt "."?
 ?expr: or_expr
 
 ?or_expr: and_expr
-    |   or_expr  _WS? "||" _WS? | _WS "or" _WS and_expr -> or
+    |   or_expr (_WS? "||" _WS? | _WS "or" _WS) and_expr -> or
 
 ?and_expr: eq_expr
-    |   and_expr _WS? "&&" _WS? | _WS "and" _WS eq_expr -> and 
+    |   and_expr (_WS? "&&" _WS? | _WS "and" _WS) eq_expr -> and 
 
-?eq_expr:rel_expr
-    |  eq_expr _WS?"=="_WS? | _WS "equals" _WS rel_expr -> eq
+?eq_expr: rel_expr
+    |  eq_expr (_WS?"=="_WS? | _WS "equals" _WS) rel_expr -> eq
 
 ?rel_expr: plus_expr
     |   rel_expr (_WS? "!=" _WS?| _WS "not equals" _WS) plus_expr  -> neq
