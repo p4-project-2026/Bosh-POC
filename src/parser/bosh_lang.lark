@@ -40,6 +40,7 @@ program: stmt "."?
 
 ?unary_expr: access_expr
     | ("not" _WS | "!" _WS?| "negative" _WS | "neg" _WS)  unary_expr -> not
+    | "("_WS* expr _WS*")" -> paren
     
 
 ?access_expr: TERM
