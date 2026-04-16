@@ -5,56 +5,57 @@ program: stmt "."?
 ?stmt: general_stsmt
 
 ?general_stsmt: stmt _SEP stmt -> stmt
-    |IDENT " is " expr -> asign
-    | ("say " | "print " | "output ") expr -> print
-    | ("return ") expr -> return
+    |IDENT _WS "is" _WS expr -> asign
+    | ("say" | "print" | "output") _WS expr -> print
+    | ("return") _WS expr -> return
     |expr
 
-?domain-stmt:
+?domain_stmt: "go to" _WS expr 
 
 ?expr: or_expr
 
 ?or_expr: and_expr
-    |   or_expr  "||" | " || " | " or " and_expr -> or
+    |   or_expr  _WS? "||" _WS? | _WS "or" _WS and_expr -> or
 
-?and_expr: eqexpr
-    |   and_expr "&&" | " && " | " and " eq_expr -> and 
+?and_expr: eq_expr
+    |   and_expr _WS? "&&" _WS? | _WS "and" _WS eq_expr -> and 
 
-?eq_expr:relexpr
-    |  eq_expr "==" | " == " | " equals " relexpr -> eq
+?eq_expr:rel_expr
+    |  eq_expr _WS?"=="_WS? | _WS "equals" _WS rel_expr -> eq
 
-?rel_expr: plusexpr
-    |   rel_expr ("!=" |" != " | " not equals ") plusexpr  -> neq
-    |   rel_expr (">" | " > " | " greater than ") plusexpr   ->  gt
-    |   rel_expr ("<" | " < " | " less than ") plusexpr    -> lt
-    |   rel_expr (">=" | " >= " | " greater or equal ") plusexpr  -> gte
-    |   rel_expr ( "<=" | " <= " | " less or equal ") plusexpr   -> lte
+?rel_expr: plus_expr
+    |   rel_expr (_WS? "!=" _WS?| _WS "not equals" _WS) plus_expr  -> neq
+    |   rel_expr (_WS? ">" _WS? | _WS "greater than" _WS) plus_expr   ->  gt
+    |   rel_expr (_WS? "<" _WS? | _WS "less than" _WS) plus_expr    -> lt
+    |   rel_expr (_WS? ">=" _WS?| _WS "greater or equal" _WS) plus_expr  -> gte
+    |   rel_expr (_WS? "<=" _WS?| _WS "less or equal" _WS) plus_expr   -> lte
 
-?plus_expr: multexpr
-    |   plus_expr (" + " | "+" | " plus ") multexpr -> plus
-    |   plus_expr (" - " | "-" | " minus ") multexpr   -> minus
+?plus_expr: mult_expr
+    |   plus_expr (_WS?"+"_WS?|_WS "plus" _WS) mult_expr -> plus
+    |   plus_expr (_WS?"-"_WS?| _WS "minus" _WS) mult_expr   -> minus
     
-?mult_expr:unaryexpr
-    |   mult_expr (" * " | "*" | " times ") unaryexpr -> mult
-    |   mult_expr (" / " |"/" | " divided by ") unaryexpr -> div
-    |   mult_expr (" % " | " mod ") unaryexpr -> mod
+?mult_expr:unary_expr
+    |   mult_expr (_WS? "*" _WS? | _WS "times" _WS) unary_expr -> mult
+    |   mult_expr (_WS? "/" _WS?| _WS "divided by" _WS) unary_expr -> div
+    |   mult_expr (_WS? "%" _WS?| _WS "mod" _WS) unary_expr -> mod
 
-?unary_expr: accessexpr
-    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unary_expr -> not
+?unary_expr: access_expr
+    | ("not" _WS | "!" _WS?| "negative" _WS | "neg" _WS)  unary_expr -> not
 
 ?access_expr: TERM
 
-?TERM:IDENT
+TERM:IDENT
     | NUM
     | STRING        
-    | "true"        -> true
-    | "false"       -> false
-    | "null"        -> null
+    | "true"       
+    | "false"      
+    | "null"       
 
-?TYPE: "int" | "string" | "bool" | "null"
+TYPE: "int" | "string" | "bool" | "null"
 
-_SEP: "." " "+| (" "* _NL)+ | "." (" "* _NL)?
+_SEP: "." _WS+| (_WS* _NL)+ | "." (_WS* _NL)+
 
+_WS: " "
 %import common.NEWLINE -> _NL
 %import common.INT -> NUM
 %import common.ESCAPED_STRING -> STRING
