@@ -8,7 +8,6 @@ program: stmt "."?
     |IDENT _WS "is" _WS expr -> asign
     | ("say" | "print" | "output") _WS expr -> print
     | ("return") _WS expr -> return
-    |expr
 
 ?domain_stmt: "go to" _WS expr 
 
@@ -47,12 +46,12 @@ program: stmt "."?
     |IDENT  (_WS ("result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) )? -> func
 
 TERM:IDENT
-    | NUM
-    | STRING        
-    | "true"       
-    | "false"      
-    | "null"       
-    | "now" 
+    | NUMBER
+    | STRING
+    | "true"
+    | "false"
+    | "null"
+    | "now"
     | "here"
 
 TYPE: "int" | "string" | "bool" | "null"
@@ -61,6 +60,6 @@ _SEP: "." _WS+| (_WS* _NL)+ | "." (_WS* _NL)+
 
 _WS: " "
 %import common.NEWLINE -> _NL
-%import common.INT -> NUM
+%import common.INT -> NUMBER
 %import common.ESCAPED_STRING -> STRING
 IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
