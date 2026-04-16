@@ -44,7 +44,7 @@ program: stmt "."?
     
 
 ?access_expr: TERM
-    |IDENT  (_WS ("result" )? _WS "using" _WS  "(" _WS* expr ("," _WS* expr)* ")" | expr )? -> func
+    |IDENT  (_WS ("result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) )? -> func
 
 TERM:IDENT
     | NUM
