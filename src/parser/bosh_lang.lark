@@ -9,9 +9,10 @@ program: stmt "."?
                 | ("say" | "print" | "output") _WS expr -> print
                 | ("return") _WS expr -> return
 
-?domain_stmt: "go to" _WS expr 
+?domain_stmt    : "go to" _WS expr 
 
-?expr: or_expr
+?expr   :or_expr
+        
 
 ?or_expr    : and_expr
             | or_expr (_WS? "||" _WS? | _WS "or" _WS) and_expr -> or
@@ -41,26 +42,50 @@ program: stmt "."?
 ?unary_expr : access_expr
             | ("not" _WS | "!" _WS?| "negative" _WS | "neg" _WS) unary_expr -> not
             | "("_WS* expr _WS*")" -> paren
-    
-// conflict: func and var,    
-?access_expr    : term 
-                |IDENT  (_WS ("result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) ) -> func
+            | "length of" _WS access_expr -> length
+            | "first element of" _WS access_expr -> first
+            | "last element of"  _WS access_expr -> last
 
+
+    // chech up on 
+?access_expr    : term
+
+
+
+// conflict: func and var. both can be reduced to IDENT.    
 ?term   :IDENT -> var
-        | NUMBER
-        | STRING
-        | "true"
-        | "false"
-        | "null"
-        | "now"
-        | "here"
+        |IDENT  ((_WS "result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) ) -> func
+        | NUMBER -> int
+        | STRING -> string
+        | "true" -> true
+        | "false" -> false
+        | "null" -> null
+        | "now" -> now
+        | "here" -> here
 
-TYPE: "int" | "string" | "bool" | "null"
+
+TYPE    : "int"
+        | "string" 
+        | "bool" 
+        | "null"
+        | "date"
+        | "time"
+        | "list"
+        | "folder"
+        | "file"
+
+unit    : "second" -> second
+        | "minute" -> minute
+        | "hour" -> hour
+        | "day" -> day
+        | "month" -> month
+        | "year" -> year
 
 _SEP: "." _WS+| (_WS* _NL)+ | "." (_WS* _NL)+
-
+COMMENT: /#[^\n]*/
 _WS: " "
 %import common.NEWLINE -> _NL
 %import common.INT -> NUMBER
 %import common.ESCAPED_STRING -> STRING
 IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
+%ignore COMMENT
