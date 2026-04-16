@@ -5,7 +5,7 @@ program: stmt "."?
 ?stmt: general_stmt
 
 ?general_stmt: stmt _SEP stmt -> stmt
-    |IDENT _WS "is" _WS expr -> asign
+    | IDENT _WS "is" _WS expr -> asign
     | ("say" | "print" | "output") _WS expr -> print
     | ("return") _WS expr -> return
 
@@ -33,7 +33,7 @@ program: stmt "."?
     |   plus_expr (_WS?"+"_WS?|_WS "plus" _WS) mult_expr -> plus
     |   plus_expr (_WS?"-"_WS?| _WS "minus" _WS) mult_expr   -> minus
     
-?mult_expr:unary_expr
+?mult_expr: unary_expr
     |   mult_expr (_WS? "*" _WS? | _WS "times" _WS) unary_expr -> mult
     |   mult_expr (_WS? "/" _WS?| _WS "divided by" _WS) unary_expr -> div
     |   mult_expr (_WS? "%" _WS?| _WS "mod" _WS) unary_expr -> mod
@@ -42,11 +42,11 @@ program: stmt "."?
     | ("not" _WS | "!" _WS?| "negative" _WS | "neg" _WS)  unary_expr -> not
     | "("_WS* expr _WS*")" -> paren
     
+// conflict: func and var,    
+?access_expr: term 
+    |IDENT  (_WS ("result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) ) -> func
 
-?access_expr: TERM
-    |IDENT  (_WS ("result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) )? -> func
-
-TERM:IDENT
+?term:IDENT -> var
     | NUMBER
     | STRING
     | "true"
