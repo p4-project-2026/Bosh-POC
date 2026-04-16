@@ -6,7 +6,11 @@ program: stmt "."?
 
 ?general_stsmt: stmt _SEP stmt -> stmt
     |IDENT " is " expr -> asign
+    | ("say " | "print " | "output ") expr -> print
+    | ("return ") expr -> return
     |expr
+
+?domain-stmt:
 
 ?expr: or_expr
 
@@ -38,16 +42,18 @@ program: stmt "."?
 ?unary_expr: accessexpr
     | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unary_expr -> not
 
-?access_expr: term
+?access_expr: TERM
 
-?term:IDENT
+?TERM:IDENT
     | NUM
     | STRING        
     | "true"        -> true
     | "false"       -> false
     | "null"        -> null
 
-_SEP: "." " "| (" "* _NL)+ | "." (" "* _NL)
+?TYPE: "int" | "string" | "bool" | "null"
+
+_SEP: "." " "+| (" "* _NL)+ | "." (" "* _NL)?
 
 %import common.NEWLINE -> _NL
 %import common.INT -> NUM
