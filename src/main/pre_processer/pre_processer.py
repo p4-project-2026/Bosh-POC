@@ -1,4 +1,4 @@
-class pre_processer:
+class PreProcesser:
     def __init__(self, data):
         self.data = data
 
