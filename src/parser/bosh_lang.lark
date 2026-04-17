@@ -11,8 +11,9 @@ program: stmt "."?
 
 ?domain_stmt    : "go to" _WS expr 
 
-?expr   :or_expr
-        
+?expr   :or_expr    
+        |expr _WS "regex" _WS or_expr -> regex
+
 
 ?or_expr    : and_expr
             | or_expr (_WS? "||" _WS? | _WS "or" _WS) and_expr -> or
@@ -20,8 +21,10 @@ program: stmt "."?
 ?and_expr   : eq_expr
             | and_expr (_WS? "&&" _WS? | _WS "and" _WS) eq_expr -> and 
 
+
 ?eq_expr    : rel_expr
             | eq_expr (_WS?"=="_WS? | _WS "equals" _WS) rel_expr -> eq
+
 
 ?rel_expr   : plus_expr
             | rel_expr (_WS? "!=" _WS?| _WS "not equals" _WS) plus_expr         -> neq
@@ -29,57 +32,57 @@ program: stmt "."?
             | rel_expr (_WS? "<" _WS? | _WS "less than" _WS) plus_expr          -> lt
             | rel_expr (_WS? ">=" _WS?| _WS "greater or equal" _WS) plus_expr   -> gte
             | rel_expr (_WS? "<=" _WS?| _WS "less or equal" _WS) plus_expr      -> lte
+    
 
 ?plus_expr  : mult_expr
             | plus_expr (_WS?"+"_WS?|_WS "plus" _WS) mult_expr -> plus
             | plus_expr (_WS?"-"_WS?| _WS "minus" _WS) mult_expr -> minus
-    
+
+
 ?mult_expr  :unary_expr
             | mult_expr (_WS? "*" _WS? | _WS "times" _WS) unary_expr -> mult
             | mult_expr (_WS? "/" _WS?| _WS "divided by" _WS) unary_expr -> div
             | mult_expr (_WS? "%" _WS?| _WS "mod" _WS) unary_expr -> mod
+            |mult_expr _WS "at" _WS unary_expr -> find_file 
+            |mult_expr _WS "regex" _WS unary_expr -> regex
+
 
 ?unary_expr : access_expr
             | ("not" _WS | "!" _WS?| "negative" _WS | "neg" _WS) unary_expr -> not
-            | "("_WS* expr _WS*")" -> paren
+
             | "length of" _WS access_expr -> length
             | "first element of" _WS access_expr -> first
             | "last element of"  _WS access_expr -> last
 
 
+
     // chech up on 
 ?access_expr    : term
+                |access_expr _WS "at" _WS term -> list_look
+
 
 
 
 // conflict: func and var. both can be reduced to IDENT.    
-?term   :IDENT -> var
+?term   :IDENT   -> var
         |IDENT  ((_WS "result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | expr) ) -> func
         | NUMBER -> int
         | STRING -> string
         | "true" -> true
-        | "false" -> false
+        | "false"-> false
         | "null" -> null
-        | "now" -> now
+        | "now"  -> now
         | "here" -> here
+        | "("_WS* expr _WS*")" -> paren
 
 
-TYPE    : "int"
-        | "string" 
-        | "bool" 
-        | "null"
-        | "date"
-        | "time"
-        | "list"
-        | "folder"
-        | "file"
 
 unit    : "second" -> second
         | "minute" -> minute
-        | "hour" -> hour
-        | "day" -> day
-        | "month" -> month
-        | "year" -> year
+        | "hour"   -> hour
+        | "day"    -> day
+        | "month"  -> month
+        | "year"   -> year
 
 _SEP: "." _WS+| (_WS* _NL)+ | "." (_WS* _NL)+
 COMMENT: /#[^\n]*/
