@@ -70,7 +70,7 @@ program: stmt "."?
 ?term   : IDENT  -> var
         | IDENT  (_WS "result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | term) -> func
         | NUMBER -> number
-        | FLOAT  -> dicimal
+        | FLOAT  -> decimal
         | STRING -> text
         | BOOLEAN -> boolean
         | "null" -> null
@@ -80,7 +80,7 @@ program: stmt "."?
  
 TYPE    : "text"
         | "number"
-        | "dicimal"
+        | "decimal"
         | "boolean"
         | "date" 
         | "time" 
