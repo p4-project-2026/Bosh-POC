@@ -7,12 +7,13 @@ program: stmt "."?
         | def_stmt
 
 ?general_stmt   : stmt _SEP stmt -> stmt
-                |  IDENT _WS "is" _WS expr -> asign
+                
                 | ("say" | "print" | "output") _WS expr -> print
                 | ("return") _WS expr -> return
 
-?def_stmt   : expr _WS "is" _WS expr -> asign
+?def_stmt   : IDENT _WS "is" _WS expr -> asign
             | expr _WS "is" _WS "a" _WS TYPE _WS expr? -> assig_type
+            |"new"? _WS "task" _WS IDENT _WS "uses" (_WS IDENT ("," IDENT)*)+":" "BLOCKSTART" stmt "BLOCKEND" -> asign_func
 
 ?domain_stmt    : "go to" _WS expr
                 | ("make" | "create") NEW? _WS "file" _WS expr _WS "in" _WS expr -> make_file
@@ -64,14 +65,15 @@ program: stmt "."?
                 | access_expr _WS "at index" _WS access_expr -> list_look
                 | access_expr _WS "regex" _WS access_expr -> regex
                 | access_expr _WS "age" -> age
-                // unit needs to be looked into. I don't think it fits here.
+                // unit needs to be looked into. I don't think it fits here and and can't do much as it is written.
                 | access_expr _WS unit ->unit
+                |
 
 
 
 // conflict: func and var. both can be reduced to IDENT.    
 ?term   : IDENT  -> var
-        | IDENT  (_WS "result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | term) -> func
+//        | IDENT  (_WS "result" )? _WS "using" _WS  ("(" _WS* expr ("," _WS* expr)* ")" | term) -> func
         | NUMBER -> number
         | FLOAT  -> decimal
         | STRING -> text
