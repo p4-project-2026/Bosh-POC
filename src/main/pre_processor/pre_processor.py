@@ -1,13 +1,15 @@
-class PreProcesser:
+class PreProcessor:
     def __init__(self, data):
         self.data = data
 
     def run(self):
         self.whitespace_strip()
         self.insert_symbols_at_nested_indents()
+        return self.data
 
     def whitespace_strip(self):
         self.data = self.data.strip()
+        return self.data
 
     def insert_symbols_at_nested_indents(self):
         # inserts {} around nested blocks of indented code
@@ -27,5 +29,9 @@ class PreProcesser:
                     data[i-1] += "}"
                     indent_level_stack.pop()
 
-        self.data = "\n".join(data)
+        while len(indent_level_stack) > 1 and data:
+            data[-1] += "}"
+            indent_level_stack.pop()
 
+        self.data = "\n".join(data)
+        return self.data
