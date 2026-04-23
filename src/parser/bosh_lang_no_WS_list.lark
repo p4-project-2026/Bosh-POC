@@ -3,7 +3,7 @@
 program: block
 
 block:   stmt (_SEP stmt)* _SEP?
-?in_code_block: _NL* _BLOCKSTART _NL  block _NL _BLOCKEND
+?in_code_block: _NL _BLOCKSTART _NL block _NL _BLOCKEND
 
 
 ?stmt   : general_stmt
@@ -11,14 +11,14 @@ block:   stmt (_SEP stmt)* _SEP?
         | def_stmt
 
 ?general_stmt   : stmt ("else" | "otherwise") stmt  -> if_unable
-                | "if" expr ":"? in_code_block (_NL*( "else"|"otherwise") ":"?  in_code_block)?  -> if_else
+                | "if" expr ":" in_code_block (_NL*( "else"|"otherwise") ":"? in_code_block)?  -> if_else
                 //why is ("in" expr) removable?
                 | ("for all" | "for each") IDENT ("in" expr)? ":"? in_code_block -> for_all
-                | "repeat until" expr ":"?  in_code_block -> repeat
+                | "repeat until" expr in_code_block -> repeat
                 | ("stop" | "quit") -> quit
                 | ("say" | "print" | "output") expr -> print
                 | ("return") expr   -> return
-                // I dont know what this is.
+  
                 | "add" expr "to" expr -> add_i_dont_know
                 | "remove" expr "from" expr -> remove_i_dont_know
 
@@ -82,7 +82,7 @@ block:   stmt (_SEP stmt)* _SEP?
     // chech up on 
 ?access_expr    : term
                 | access_expr "at index" access_expr -> list_look
-                | "regex" access_expr -> regex
+                | access_expr "regex" access_expr -> regex
                 | access_expr "age" -> age
                 | access_expr "name" ->file_name
                 | access_expr "starts with" access_expr -> starts_with
@@ -96,7 +96,7 @@ block:   stmt (_SEP stmt)* _SEP?
 // conflict: func and var. both can be reduced to IDENT.    
 ?term   : IDENT  -> var
         //"func" has a "Reduce/Reduce collision" with "paren"
-        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")") -> func
+//        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")" | term) -> func
         | NUMBER -> number
         | FLOAT  -> decimal
         | STRING -> text
@@ -140,3 +140,5 @@ BOOLEAN: "true" | "false"
 IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
 %ignore COMMENT
 %ignore _WS
+
+
