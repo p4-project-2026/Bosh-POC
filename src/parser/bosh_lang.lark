@@ -35,11 +35,11 @@ block:   stmt (_SEP stmt)* _SEP?
 
 
 
-?domain_stmt    : "go to" expr
+?domain_stmt    : "go to" expr -> go_to
                 | ("make " | "create ") NEW? TYPE expr ("in" expr)? -> make
-                | "rename" expr "to" expr
-                | "delete" expr
-                | "copy from" expr "to" expr
+                | "rename" expr "to" expr -> rename
+                | "delete" expr -> delete
+                | "copy from" expr "to" expr -> copy_from_to
 
 ?expr   :or_expr    
 
