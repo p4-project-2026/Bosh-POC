@@ -21,8 +21,8 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--tb=no -q"
+addopts = "--tb=no -vv"
 
 [project.scripts]
 main = "main.main:main"
-test = "test.test:test"
+
