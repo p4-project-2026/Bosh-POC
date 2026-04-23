@@ -1,17 +1,20 @@
 ?start: program
 
-program: stmt "."?
+program: block
+
+block:   stmt (_SEP stmt)* _SEP?
+?in_code_block: _NL* _BLOCKSTART _NL  block _NL _BLOCKEND
+
 
 ?stmt   : general_stmt
         | domain_stmt
         | def_stmt
 
-?general_stmt   : stmt _SEP stmt    -> stmt
-                | stmt ("else" | "otherwise") stmt  -> if_unable
-                | "if" expr ":" "BLOCKSTART" stmt "BLOCKEND" (("else"|"otherwise") ":"? "BLOCKSTART" stmt "BLOCKEND")?  -> if_else
+?general_stmt   : stmt ("else" | "otherwise") stmt  -> if_unable
+                | "if" expr ":"? in_code_block (_NL*( "else"|"otherwise") ":"?  in_code_block)?  -> if_else
                 //why is ("in" expr) removable?
-                | ("for all" | "for each") IDENT "in" expr ":"? "BLOCKSTART" stmt "BLOCKEND"    -> for_all
-                | "repeat until" expr "BLOCKSTART" stmt "BLOCKEND" -> repeat
+                | ("for all" | "for each") IDENT ("in" expr)? ":"? in_code_block -> for_all
+                | "repeat until" expr ":"?  in_code_block -> repeat
                 | ("stop" | "quit") -> quit
                 | ("say" | "print" | "output") expr -> print
                 | ("return") expr   -> return
@@ -23,16 +26,17 @@ program: stmt "."?
 
 
 
-?def_stmt   : expr "is" expr -> asign
-            | expr "is" "a" TYPE expr? -> assig_type
+?def_stmt       : expr "is" expr -> asign
+                | expr "is" "a" TYPE expr? -> assig_type
+                |"new"? "task" IDENT "uses" (IDENT ("," IDENT)*)+":" in_code_block -> asign_func
+
 
 
 
 
 
 ?domain_stmt    : "go to" expr
-                | ("make " | "create ") NEW? "file " expr "in" expr -> make_file
-                | ("make" | "create") NEW? "folder" expr "in" expr -> make_folder
+                | ("make " | "create ") NEW? TYPE expr ("in" expr)? -> make
                 | "rename" expr "to" expr
                 | "delete" expr
                 | "copy from" expr "to" expr
@@ -78,17 +82,21 @@ program: stmt "."?
     // chech up on 
 ?access_expr    : term
                 | access_expr "at index" access_expr -> list_look
-                | access_expr "regex" access_expr -> regex
+                | "regex" access_expr -> regex
                 | access_expr "age" -> age
+                | access_expr "name" ->file_name
+                | access_expr "starts with" access_expr -> starts_with
+                | access_expr "ends with" access_expr -> ends_with
                 // unit needs to be looked into. I don't think it fits here and and can't do much as it is written.
                 | access_expr unit ->unit
+
 
 
 
 // conflict: func and var. both can be reduced to IDENT.    
 ?term   : IDENT  -> var
         //"func" has a "Reduce/Reduce collision" with "paren"
-//        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")" | term) -> func
+        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")") -> func
         | NUMBER -> number
         | FLOAT  -> decimal
         | STRING -> text
@@ -96,7 +104,8 @@ program: stmt "."?
         | "null" -> null
         | "now"  -> now
         | "here" -> here
-        |"(" expr ")" -> paren
+        | "(" expr ")" -> paren
+        | TYPE
  
 TYPE    : "text"
         | "number"
@@ -118,8 +127,10 @@ unit    : ("second" | "seconds") -> second
 
 NEW : "new"
 
-_SEP: "." _NL* |  _NL+
-COMMENT: /#[^\n]*/
+_BLOCKSTART: "{"
+_BLOCKEND: "}" 
+_SEP: "." _WS* _NL* |  _NL+
+COMMENT: /#[^\n]*\n/
 %import common.WS_INLINE -> _WS
 BOOLEAN: "true" | "false"
 %import common.NEWLINE -> _NL
