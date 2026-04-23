@@ -1,20 +1,17 @@
 ?start: program
 
-program: block
+program: stmt "."?
 
-block:   stmt (_SEP stmt)* _SEP?
-?in_code_block: _NL* _BLOCKSTART _NL*  block _NL* _BLOCKEND
-
-
-?stmt   : general_stmt
+?stmt   : stmt _SEP stmt    -> stmt
+        | general_stmt
         | domain_stmt
         | def_stmt
 
 ?general_stmt   : stmt ("else" | "otherwise") stmt  -> if_unable
-                | "if" expr ":"? in_code_block (_NL*( "else"|"otherwise") ":"?  in_code_block)?  -> if_else
+                | "if" expr ":" block (_NL*( "else"|"otherwise") ":"? block)?  -> if_else
                 //why is ("in" expr) removable?
-                | ("for all" | "for each") IDENT ("in" expr)? ":"? in_code_block -> for_all
-                | "repeat until" expr ":"?  in_code_block -> repeat
+                | ("for all" | "for each") IDENT ("in" expr)? ":"? block -> for_all
+                | "repeat until" expr block -> repeat
                 | ("stop" | "quit") -> quit
                 | ("say" | "print" | "output") expr -> print
                 | ("return") expr   -> return
@@ -28,18 +25,18 @@ block:   stmt (_SEP stmt)* _SEP?
 
 ?def_stmt       : expr "is" expr -> asign
                 | expr "is" "a" TYPE expr? -> assig_type
-                |"new"? "task" IDENT "uses" (IDENT ("," IDENT)*)+":" in_code_block -> asign_func
+                |"new"? "task" IDENT "uses" (IDENT ("," IDENT)*)+":" block -> asign_func
 
 
 
 
 
 
-?domain_stmt    : "go to" expr -> go_to
+?domain_stmt    : "go to" expr
                 | ("make " | "create ") NEW? TYPE expr ("in" expr)? -> make
-                | "rename" expr "to" expr -> rename
-                | "delete" expr -> delete
-                | "copy from" expr "to" expr -> copy_from_to
+                | "rename" expr "to" expr
+                | "delete" expr
+                | "copy from" expr "to" expr
 
 ?expr   :or_expr    
 
@@ -82,21 +79,17 @@ block:   stmt (_SEP stmt)* _SEP?
     // chech up on 
 ?access_expr    : term
                 | access_expr "at index" access_expr -> list_look
-                | "regex" access_expr -> regex
+                | access_expr "regex" access_expr -> regex
                 | access_expr "age" -> age
-                | access_expr "name" ->file_name
-                | access_expr "starts with" access_expr -> starts_with
-                | access_expr "ends with" access_expr -> ends_with
                 // unit needs to be looked into. I don't think it fits here and and can't do much as it is written.
                 | access_expr unit ->unit
-
 
 
 
 // conflict: func and var. both can be reduced to IDENT.    
 ?term   : IDENT  -> var
         //"func" has a "Reduce/Reduce collision" with "paren"
-        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")") -> func
+//        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")" | term) -> func
         | NUMBER -> number
         | FLOAT  -> decimal
         | STRING -> text
@@ -104,7 +97,7 @@ block:   stmt (_SEP stmt)* _SEP?
         | "null" -> null
         | "now"  -> now
         | "here" -> here
-        | "(" expr ")" -> paren
+        |"(" expr ")" -> paren
         | TYPE
  
 TYPE    : "text"
@@ -126,9 +119,8 @@ unit    : ("second" | "seconds") -> second
         | ("year" | "years")  -> year
 
 NEW : "new"
-
-_BLOCKSTART: "{"
-_BLOCKEND: "}" 
+_BLOCKSTART: "BLOCKSTART"
+_BLOCKEND: "BLOCKEND"  
 _SEP: "." _WS* _NL* |  _NL+
 COMMENT: /#[^\n]*\n/
 %import common.WS_INLINE -> _WS
@@ -140,3 +132,6 @@ BOOLEAN: "true" | "false"
 IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
 %ignore COMMENT
 %ignore _WS
+
+
+block : _NL _BLOCKSTART _NL stmt _NL _BLOCKEND
