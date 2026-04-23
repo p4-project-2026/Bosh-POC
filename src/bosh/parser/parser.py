@@ -2,7 +2,7 @@ from lark import Lark, Transformer
 from .ast_nodes import *
 
 def parseBosh(processed_code):
-    with open('C:\\Users\\gunna\\Documents\\Datalogi\\Projekter\\P4\\Bosh-POC\\src\\bosh\\parser\\bosh_lang.lark', 'r') as f:
+    with open('bosh_lang.lark', 'r') as f:
         grammar = f.read()
     
     # Laver parseren med vores grammar og specificere transformer
