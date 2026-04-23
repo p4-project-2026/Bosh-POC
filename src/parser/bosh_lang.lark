@@ -3,7 +3,7 @@
 program: block
 
 block:   stmt (_SEP stmt)* _SEP?
-?in_code_block: _NL* _BLOCKSTART _NL  block _NL _BLOCKEND
+?in_code_block: _NL* _BLOCKSTART _NL*  block _NL* _BLOCKEND
 
 
 ?stmt   : general_stmt
