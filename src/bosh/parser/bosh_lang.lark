@@ -26,9 +26,9 @@ block:   stmt (_SEP stmt)* _SEP?
 
 
 
-?def_stmt       : expr "is" expr -> asign
-                | expr "is" "a" TYPE expr? -> assig_type
-                |"new"? "task" IDENT "uses" (IDENT ("," IDENT)*)+":" in_code_block -> asign_func
+?def_stmt       : expr "is" expr -> assign
+                | expr "is" "a" TYPE expr? -> assign_type
+                |"new"? "task" IDENT "uses" (IDENT ("," IDENT)*)+":" in_code_block -> assign_func
 
 
 
