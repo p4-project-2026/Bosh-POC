@@ -99,6 +99,7 @@ block:   stmt (_SEP stmt)* _SEP?
         | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")") -> func
         | NUMBER -> number
         | FLOAT  -> decimal
+        | interpolated_string -> text
         | STRING -> text
         | BOOLEAN -> boolean
         | "null" -> null
@@ -106,7 +107,15 @@ block:   stmt (_SEP stmt)* _SEP?
         | "here" -> here
         | "(" expr ")" -> paren
         | TYPE
- 
+
+interpolated_string: "\"" string_part* "\""
+
+?string_part    : INTERP       -> interp
+                | STRING_TEXT  -> text_chunk
+
+INTERP  : "@" IDENT
+STRING_TEXT     : /([^"@]|@@)+/
+
 TYPE    : "text"
         | "number"
         | "decimal"
@@ -126,7 +135,6 @@ unit    : ("second" | "seconds") -> second
         | ("year" | "years")  -> year
 
 NEW : "new"
-
 _BLOCKSTART: "{"
 _BLOCKEND: "}" 
 _SEP: "." _WS* _NL* |  _NL+
