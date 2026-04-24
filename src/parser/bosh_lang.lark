@@ -95,8 +95,8 @@ block:   stmt (_SEP stmt)* _SEP?
 
 // conflict: func and var. both can be reduced to IDENT.    
 ?term   : IDENT  -> var
-        //"func" has a "Reduce/Reduce collision" with "paren"
-        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")") -> func
+        //"func" has a "Reduce/Reduce collision" with "IDENT" added 'nothing' to resolve it.
+        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")"| "nothing") -> func
         | NUMBER -> number
         | FLOAT  -> decimal
         | interpolated_string -> text
