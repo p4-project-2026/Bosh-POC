@@ -15,6 +15,14 @@ dependencies = [
 [tool.uv]
 package = true
 
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[tool.pytest.ini_options]
+addopts = "--tb=no -vv"
+
 [project.scripts]
 main = "main.main:main"
-test = "test.test:test"
+

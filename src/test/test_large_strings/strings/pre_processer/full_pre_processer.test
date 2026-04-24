@@ -1,0 +1,27 @@
+main.pre_processor.pre_processor:PreProcessor:run
+
+
+say 1
+if (a):
+    say 2
+    if (b):
+        say 3
+    say 4
+    if (c):
+        say 5
+
+        say 6
+say 7
+   
+===
+say 1
+if (a): {
+    say 2
+    if (b): {
+        say 3}
+    say 4
+    if (c): {
+        say 5
+
+        say 6}}
+say 7
