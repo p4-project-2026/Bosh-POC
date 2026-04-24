@@ -1,61 +1,150 @@
 ?start: program
 
-program: stmt "."?
+program: block
 
-?stmt: general_stsmt
+block:   stmt (_SEP stmt)* _SEP?
+?in_code_block: _NL* _BLOCKSTART _NL*  block _NL* _BLOCKEND
 
-?general_stsmt: stmt _SEP stmt -> stmt
-    |IDENT " is " expr -> asign
-    | ("say " | "print " | "output ") expr -> print
-    | ("return ") expr -> return
-    |expr
 
-?domain-stmt:
+?stmt   : general_stmt
+        | domain_stmt
+        | def_stmt
 
-?expr: or_expr
+?general_stmt   : stmt ("else" | "otherwise") stmt  -> if_unable
+                | "if" expr ":"? in_code_block (_NL*( "else"|"otherwise") ":"?  in_code_block)?  -> if_else
+                //why is ("in" expr) removable?
+                | ("for all" | "for each") IDENT ("in" expr)? ":"? in_code_block -> for_all
+                | "repeat until" expr ":"?  in_code_block -> repeat
+                | ("stop" | "quit") -> quit
+                | ("say" | "print" | "output") expr -> print
+                | ("return") expr   -> return
+                // I dont know what this is.
+                | "add" expr "to" expr -> add_i_dont_know
+                | "remove" expr "from" expr -> remove_i_dont_know
 
-?or_expr: and_expr
-    |   or_expr  "||" | " || " | " or " and_expr -> or
 
-?and_expr: eqexpr
-    |   and_expr "&&" | " && " | " and " eq_expr -> and 
 
-?eq_expr:relexpr
-    |  eq_expr "==" | " == " | " equals " relexpr -> eq
 
-?rel_expr: plusexpr
-    |   rel_expr ("!=" |" != " | " not equals ") plusexpr  -> neq
-    |   rel_expr (">" | " > " | " greater than ") plusexpr   ->  gt
-    |   rel_expr ("<" | " < " | " less than ") plusexpr    -> lt
-    |   rel_expr (">=" | " >= " | " greater or equal ") plusexpr  -> gte
-    |   rel_expr ( "<=" | " <= " | " less or equal ") plusexpr   -> lte
 
-?plus_expr: multexpr
-    |   plus_expr (" + " | "+" | " plus ") multexpr -> plus
-    |   plus_expr (" - " | "-" | " minus ") multexpr   -> minus
+?def_stmt       : expr "is" expr -> asign
+                | expr "is" "a" TYPE expr? -> assig_type
+                |"new"? "task" IDENT "uses" (IDENT ("," IDENT)*)+":" in_code_block -> asign_func
+
+
+
+
+
+
+?domain_stmt    : "go to" expr -> go_to
+                | ("make " | "create ") NEW? TYPE expr ("in" expr)? -> make
+                | "rename" expr "to" expr -> rename
+                | "delete" expr -> delete
+                | "copy from" expr "to" expr -> copy_from_to
+
+?expr   :or_expr    
+
+
+?or_expr    : and_expr
+            | or_expr ( "||"  | "or" ) and_expr -> or
+
+?and_expr   : eq_expr
+            | and_expr ( "&&"  | "and" ) eq_expr -> and 
+
+
+?eq_expr    : rel_expr
+            | eq_expr ("==" | "equals" ) rel_expr -> eq
+
+
+?rel_expr   : plus_expr
+            | rel_expr ( "!=" | "not equals" ) plus_expr         -> neq
+            | rel_expr ( ">"  | "greater than" ) plus_expr       -> gt
+            | rel_expr ( "<"  | "less than" ) plus_expr          -> lt
+            | rel_expr ( ">=" | "greater or equal" ) plus_expr   -> gte
+            | rel_expr ( "<=" | "less or equal" ) plus_expr      -> lte
     
-?mult_expr:unaryexpr
-    |   mult_expr (" * " | "*" | " times ") unaryexpr -> mult
-    |   mult_expr (" / " |"/" | " divided by ") unaryexpr -> div
-    |   mult_expr (" % " | " mod ") unaryexpr -> mod
 
-?unary_expr: accessexpr
-    | ("not " | "not " | "!" | "! " | "negative " | "neg ")  unary_expr -> not
+?plus_expr  : mult_expr
+            | plus_expr ("+"|"plus" ) mult_expr -> plus
+            | plus_expr ("-"| "minus" ) mult_expr -> minus
 
-?access_expr: TERM
 
-?TERM:IDENT
-    | NUM
-    | STRING        
-    | "true"        -> true
-    | "false"       -> false
-    | "null"        -> null
+?mult_expr  :unary_expr
+            | mult_expr ( "*"  | "times" ) unary_expr -> mult
+            | mult_expr ( "/" | "divided by" ) unary_expr -> div
+            | mult_expr ( "%" | "mod" ) unary_expr -> mod
 
-?TYPE: "int" | "string" | "bool" | "null"
+?unary_expr : access_expr
+            | ("not" | "!" | "negative" | "neg" ) unary_expr -> not
+            | "length of" access_expr -> length
+            | "first element of" access_expr -> first
+            | "last element of"  access_expr -> last
 
-_SEP: "." " "+| (" "* _NL)+ | "." (" "* _NL)?
+    // chech up on 
+?access_expr    : term
+                | access_expr "at index" access_expr -> list_look
+                | "regex" access_expr -> regex
+                | access_expr "age" -> age
+                | access_expr "name" ->file_name
+                | access_expr "starts with" access_expr -> starts_with
+                | access_expr "ends with" access_expr -> ends_with
+                // unit needs to be looked into. I don't think it fits here and and can't do much as it is written.
+                | access_expr unit ->unit
 
+
+
+
+// conflict: func and var. both can be reduced to IDENT.    
+?term   : IDENT  -> var
+        //"func" has a "Reduce/Reduce collision" with "IDENT" added 'nothing' to resolve it.
+        | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")"| "nothing") -> func
+        | NUMBER -> number
+        | FLOAT  -> decimal
+        | interpolated_string -> text
+        | STRING -> text
+        | BOOLEAN -> boolean
+        | "null" -> null
+        | "now"  -> now
+        | "here" -> here
+        | "(" expr ")" -> paren
+        | TYPE
+
+interpolated_string: "\"" string_part* "\""
+
+?string_part    : INTERP       -> interp
+                | STRING_TEXT  -> text_chunk
+
+INTERP  : "@" IDENT
+STRING_TEXT     : /([^"@]|@@)+/
+
+TYPE    : "text"
+        | "number"
+        | "decimal"
+        | "boolean"
+        | "date" 
+        | "time" 
+        | "list"
+        | "folder" 
+        | "file"
+
+
+unit    : ("second" | "seconds") -> second
+        | ("minute" | "minutes") -> minute
+        | ("hour" | "hours")   -> hour
+        | ("day" | "days")   -> day
+        | ("month" | "months")  -> month
+        | ("year" | "years")  -> year
+
+NEW : "new"
+_BLOCKSTART: "{"
+_BLOCKEND: "}" 
+_SEP: "." _WS* _NL* |  _NL+
+COMMENT: /#[^\n]*\n/
+%import common.WS_INLINE -> _WS
+BOOLEAN: "true" | "false"
 %import common.NEWLINE -> _NL
-%import common.INT -> NUM
+%import common.INT -> NUMBER
+%import common.FLOAT -> FLOAT
 %import common.ESCAPED_STRING -> STRING
 IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
+%ignore COMMENT
+%ignore _WS
