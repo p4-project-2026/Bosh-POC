@@ -1,4 +1,4 @@
-main.pre_processor.pre_processor:PreProcessor:run
+bosh.pre_processor.pre_processor:PreProcessor:run
 
 
 say 1

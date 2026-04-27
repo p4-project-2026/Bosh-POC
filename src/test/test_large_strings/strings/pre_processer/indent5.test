@@ -1,4 +1,4 @@
-main.pre_processor.pre_processor.PreProcessor:insert_symbols_at_nested_indents
+bosh.pre_processor.pre_processor.PreProcessor:insert_symbols_at_nested_indents
 if (a):
     bla bla bla
 
