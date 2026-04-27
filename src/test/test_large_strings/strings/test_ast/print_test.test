@@ -1,0 +1,5 @@
+bosh.parser.parser.parseBosh
+Message is "Testing...".
+say "@Message".
+===
+Program(statements=[Block(statements=[Assign(target=Identifier(name='Message'), value=StringLiteral(value='Testing...')), Print(expression=StringLiteral(value='@Message'))])])
