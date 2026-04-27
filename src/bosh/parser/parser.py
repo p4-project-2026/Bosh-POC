@@ -43,3 +43,9 @@ class BoshTransformer(Transformer):
     def text(self, args):
         content = str(args[0])[1:-1]
         return StringLiteral(value=content)
+        
+    def number(self, args):
+        return NumberLiteral(value=float(args[0]))
+
+    def decimal(self, args):
+        return DecimalLiteral(value=float(args[0]))

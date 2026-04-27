@@ -127,6 +127,10 @@ class NumberLiteral(ASTNode):
     value: float
 
 @dataclass
+class DecimalLiteral(ASTNode):
+    value: float
+
+@dataclass
 class StringLiteral(ASTNode):
     value: str
 
