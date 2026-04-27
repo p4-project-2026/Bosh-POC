@@ -3,6 +3,8 @@ from .ast_nodes import *
 
 
 def parseBosh(processed_code):
+    
+    
     with open("src/bosh/parser/bosh_lang.lark", "r") as f:
         grammar = f.read()
 
@@ -14,7 +16,6 @@ def parseBosh(processed_code):
 
     ast = BoshTransformer().transform(tree)
     return ast
-
 
 # Her laver vi vores Transformer som konverterer parse-træet til vores AST
 # Hver metode i klassen svarer til en regel i vores grammar
@@ -42,10 +43,13 @@ class BoshTransformer(Transformer):
 
     def text(self, args):
         content = str(args[0])[1:-1]
+        # Mangler at finde interpolations og erstatte med værdien
+
         return StringLiteral(value=content)
-        
+
     def number(self, args):
         return NumberLiteral(value=float(args[0]))
 
     def decimal(self, args):
         return DecimalLiteral(value=float(args[0]))
+
