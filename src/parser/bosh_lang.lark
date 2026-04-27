@@ -99,21 +99,14 @@ block:   stmt (_SEP stmt)* _SEP?
         | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")"| "nothing") -> func
         | NUMBER -> number
         | FLOAT  -> decimal
-        | interpolated_string -> text
+        | STRING -> text
         | BOOLEAN -> boolean
         | "null" -> null
         | "now"  -> now
         | "here" -> here
         | "(" expr ")" -> paren
         | TYPE
-
-?interpolated_string: "\"" string_part* "\""
-
-?string_part    : INTERP       -> interp
-                | STRING_TEXT  -> text_chunk
-
-INTERP  : "@" IDENT
-STRING_TEXT     : /([^"@]|@@)+/
+/
 
 TYPE    : "text"
         | "number"
@@ -143,6 +136,7 @@ BOOLEAN: "true" | "false"
 %import common.NEWLINE -> _NL
 %import common.INT -> NUMBER
 %import common.FLOAT -> FLOAT
+%import common.ESCAPED_STRING -> STRING
 IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
 %ignore COMMENT
 %ignore _WS
