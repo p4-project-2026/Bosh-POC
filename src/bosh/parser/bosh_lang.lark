@@ -11,16 +11,15 @@ block:   stmt (_SEP stmt)* _SEP?
         | def_stmt
 
 ?general_stmt   : stmt ("else" | "otherwise") stmt  -> if_unable
-                | "if" expr ":"? in_code_block (_NL*( "else"|"otherwise") ":"?  in_code_block)?  -> if_else
+                | "if" expr ":"? in_code_block (_SEP*( "else"|"otherwise") ":"?  in_code_block)?  -> if_else
                 //why is ("in" expr) removable?
                 | ("for all" | "for each") IDENT ("in" expr)? ":"? in_code_block -> for_all
                 | "repeat until" expr ":"?  in_code_block -> repeat
                 | ("stop" | "quit") -> quit
                 | ("say" | "print" | "output") expr -> print
                 | ("return") expr   -> return
-                // I dont know what this is.
-                | "add" expr "to" expr -> add_i_dont_know
-                | "remove" expr "from" expr -> remove_i_dont_know
+                | "add" expr "to" expr -> add_to_list
+                | "remove" expr "from" expr -> remove_from_list
 
 
 
@@ -99,7 +98,6 @@ block:   stmt (_SEP stmt)* _SEP?
         | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")"| "nothing") -> func
         | NUMBER -> number
         | FLOAT  -> decimal
-        | interpolated_string -> text
         | STRING -> text
         | BOOLEAN -> boolean
         | "null" -> null
@@ -108,13 +106,8 @@ block:   stmt (_SEP stmt)* _SEP?
         | "(" expr ")" -> paren
         | TYPE
 
-interpolated_string: "\"" string_part* "\""
 
-?string_part    : INTERP       -> interp
-                | STRING_TEXT  -> text_chunk
 
-INTERP  : "@" IDENT
-STRING_TEXT     : /([^"@]|@@)+/
 
 TYPE    : "text"
         | "number"
