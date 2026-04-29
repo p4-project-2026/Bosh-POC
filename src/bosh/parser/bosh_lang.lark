@@ -17,7 +17,7 @@ block:   stmt (_SEP stmt)* _SEP?
                 | "repeat until" expr ":"?  in_code_block -> repeat
                 | ("stop" | "quit") -> quit
                 | ("say" | "print" | "output") expr -> print
-                | ("return") expr   -> return
+                | ("return") expr   -> return_
                 | "add" expr "to" expr -> add_to_list
                 | "remove" expr "from" expr -> remove_from_list
 
@@ -35,7 +35,7 @@ block:   stmt (_SEP stmt)* _SEP?
 
 
 ?domain_stmt    : "go to" expr -> go_to
-                | ("make " | "create ") NEW? TYPE expr ("in" expr)? -> make
+                | ("make " | "create ") NEW? TYPE expr ("in" expr?)? -> make
                 | "rename" expr "to" expr -> rename
                 | "delete" expr -> delete
                 | "copy from" expr "to" expr -> copy_from_to
@@ -44,10 +44,10 @@ block:   stmt (_SEP stmt)* _SEP?
 
 
 ?or_expr    : and_expr
-            | or_expr ( "||"  | "or" ) and_expr -> or
+            | or_expr ( "||"  | "or" ) and_expr -> or_
 
 ?and_expr   : eq_expr
-            | and_expr ( "&&"  | "and" ) eq_expr -> and 
+            | and_expr ( "&&"  | "and" ) eq_expr -> and_ 
 
 
 ?eq_expr    : rel_expr
@@ -73,7 +73,7 @@ block:   stmt (_SEP stmt)* _SEP?
             | mult_expr ( "%" | "mod" ) unary_expr -> mod
 
 ?unary_expr : access_expr
-            | ("not" | "!" | "negative" | "neg" ) unary_expr -> not
+            | ("not" | "!" | "negative" | "neg" ) unary_expr -> not_
             | "length of" access_expr -> length
             | "first element of" access_expr -> first
             | "last element of"  access_expr -> last
@@ -91,10 +91,8 @@ block:   stmt (_SEP stmt)* _SEP?
 
 
 
-
-// conflict: func and var. both can be reduced to IDENT.    
+ 
 ?term   : IDENT  -> var
-        //"func" has a "Reduce/Reduce collision" with "IDENT" added 'nothing' to resolve it.
         | IDENT  ("result" )? "using"  ("("  expr ("," expr)* ")"| "nothing") -> func
         | NUMBER -> number
         | FLOAT  -> decimal
@@ -105,7 +103,6 @@ block:   stmt (_SEP stmt)* _SEP?
         | "here" -> here
         | "(" expr ")" -> paren
         | TYPE
-
 
 
 

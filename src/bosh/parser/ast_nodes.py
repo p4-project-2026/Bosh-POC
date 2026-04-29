@@ -54,7 +54,7 @@ class Fallback(ASTNode):
 @dataclass
 class ForAll(ASTNode):
     iterator_name: str
-    iterable: Optional[ASTNode]
+    iterable: ASTNode
     body: Block
 
 @dataclass
@@ -90,7 +90,7 @@ class GoTo(ASTNode):
 class Make(ASTNode):
     entity_type: str
     name: str
-    location: Optional[ASTNode]
+    location: ASTNode
 
 @dataclass
 class Delete(ASTNode):
@@ -135,15 +135,32 @@ class StringLiteral(ASTNode):
     value: str
 
 @dataclass
+class InterpolatedString(ASTNode):
+    parts: List[ASTNode]
+
+@dataclass
 class BooleanLiteral(ASTNode):
     value: bool
+
+@dataclass
+class NullLiteral(ASTNode):
+    pass
 
 @dataclass
 class ListLiteral(ASTNode):
     elements: List[ASTNode]
 
 @dataclass
+class ListLookup(ASTNode):
+    target: ASTNode
+    index: ASTNode
+
+@dataclass
 class Identifier(ASTNode):
+    name: str
+
+@dataclass
+class TaskIdentifier(ASTNode):
     name: str
 
 @dataclass
