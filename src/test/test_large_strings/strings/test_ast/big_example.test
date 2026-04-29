@@ -1,0 +1,28 @@
+bosh.parser.parser.parseBosh
+Backup Dir is "/local/backup".
+Dir is "/path/directory".
+# Date Prefix (YYYY-MM-DD)
+Date Prefix is now.
+
+make new folder Backup Dir.
+go to Backup Dir otherwise quit.
+
+say "Copy files from @Dir to @Backup Dir". 
+
+# Copy files
+copy from Dir to Backup Dir.
+
+for each Current File in here: {
+    if Current File equals file and Current File name starts with regex Date Formatter using ("yyyy-mm-dd") {
+        rename Current File to "@Date Prefix_@Current File"
+}}
+say "Cleaning files older than 7 days..."
+
+# Delete files older than 7 days
+for all Current File in here: {
+    if Current File equals file and Current File age greater than 7 days: {
+        delete Current File
+}}
+say "Done"
+===
+Program(statements=[Block(statements=[Assign(target=Identifier(name='Backup Dir'), value=StringLiteral(value='/local/backup')), Assign(target=Identifier(name='Dir'), value=StringLiteral(value='/path/directory')), Assign(target=Identifier(name='Date Prefix'), value=Tree('now', [])), Tree('make', [Token('NEW', 'new'), Token('TYPE', 'folder'), Identifier(name='Backup Dir')]), Tree('if_unable', [Tree('go_to', [Identifier(name='Backup Dir')]), Tree('quit', [])]), Print(expression=StringLiteral(value='Copy files from @Dir to @Backup Dir')), Tree('copy_from_to', [Identifier(name='Dir'), Identifier(name='Backup Dir')]), Tree('for_all', [Token('IDENT', 'Current File'), Tree('here', []), Block(statements=[Tree('if_else', [Tree('and', [Tree('eq', [Identifier(name='Current File'), Token('TYPE', 'file')]), Tree('starts_with', [Tree('file_name', [Identifier(name='Current File')]), Tree('regex', [Tree('func', [Token('IDENT', 'Date Formatter'), StringLiteral(value='yyyy-mm-dd')])])])]), Block(statements=[Tree('rename', [Identifier(name='Current File'), StringLiteral(value='@Date Prefix_@Current File')])])])])]), Print(expression=StringLiteral(value='Cleaning files older than 7 days...')), Tree('for_all', [Token('IDENT', 'Current File'), Tree('here', []), Block(statements=[Tree('if_else', [Tree('and', [Tree('eq', [Identifier(name='Current File'), Token('TYPE', 'file')]), Tree('gt', [Tree('age', [Identifier(name='Current File')]), Tree('unit', [NumberLiteral(value=7.0), Tree('day', [])])])]), Block(statements=[Tree('delete', [Identifier(name='Current File')])])])])]), Print(expression=StringLiteral(value='Done'))])])

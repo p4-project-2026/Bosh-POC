@@ -1,0 +1,14 @@
+bosh.parser.parser.parseBosh
+My Message is "Message passed!"
+Pi is 3.14.
+Second Num is 4
+
+say "@My Message".
+output "Pi is: @Pi"
+if Second Num equals 3
+    print "@My Message Yay!"
+else:
+    say "Number was: @Second Num, not 3".
+output "test"
+===
+Program(statements=[Block(statements=[Assign(target=Identifier(name='My Message'), value=StringLiteral(value='Message passed!')), Assign(target=Identifier(name='Pi'), value=NumberLiteral(value=3.14)), Assign(target=Identifier(name='Second Num'), value=NumberLiteral(value=4)), Print(expression=StringLiteral(value='@My Message')), Output(expression=StringLiteral(value='Pi is: @Pi')), Tree('if_else', [Tree('eq', [Identifier(name='Second Num'), NumberLiteral(value=3.0)]), Block(statements=[Print(expression=StringLiteral(value='@My Message Yay!'))]), Block(statements=[Print(expression=StringLiteral(value='Number was: @Second Num, not 3'))])]), Output(expression=StringLiteral(value='test'))])])

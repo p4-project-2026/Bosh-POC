@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def main():
-    with open("src/test/bosh_tests/print_test.bosh", "r") as f:
+    with open("src/test/bosh_examples/big_example.bosh", "r") as f:
         data = f.read()
     print("Test:\n" + data)
 

@@ -1,4 +1,4 @@
-main.pre_processor.pre_processor.PreProcessor:whitespace_strip
+bosh.pre_processor.pre_processor.PreProcessor:whitespace_strip
 
     This is a test!    
 
