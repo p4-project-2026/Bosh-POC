@@ -20,15 +20,19 @@ def main():
     # if no file is provided, print error and exit
     if len(args) == 0:
         print("Error: No bosh file provided.")
-        return
+        exit(1)
     
     #read file path from arguments and remove it from arguments
     bosh_file_path = args[0]
     args = args[1:]
     
+    if not bosh_file_path.endswith(".bosh"):
+        print(f"Error: File '{bosh_file_path}' is not a .bosh file.")
+        exit(1)
+    
     if not Path(bosh_file_path).exists():
         print(f"Error: File '{bosh_file_path}' does not exist.")
-        return 
+        exit(1)
 
     vprint(f"executing file: {bosh_file_path} with flags: {flags} and arguments: {args}")
 
