@@ -10,25 +10,54 @@ class TypeChecker:
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         match node:
-            case ast.Program:
+            case ast.Program():
                 self.check(node.block)
-            case ast.Block:
+            case ast.Block():
                 for stmt in node.statements:
                     self.check(stmt)
-            case ast.Assign:
+            case ast.Assign():
                 var_name = node.target.name
                 value_type = self.check(node.value)
                 if value_type is not None:
                     self.symbol_table[var_name] = value_type
-            case ast.Print:
+            case ast.Print():
                 self.check(node.expression)
-            case ast.BinaryOp:
+            case ast.BinaryOp():
                 left_type = self.check(node.left)
                 right_type = self.check(node.right)
+                op = node.operator
+                match op:
+                    case "plus":
+                        if left_type == "int" and right_type == "int":
+                            return "int"
+                        elif left_type == "string" and right_type == "string":
+                            return "string"
+                    case "equals":
+                        if left_type == right_type:
+                            return "bool"
+                print(f"Type error: Unsupported operator '{op}' for types '{left_type}' and '{right_type}'")
+
                 if left_type == right_type:
                     return left_type
                 else:
                     print(f"Type error: Cannot apply operator '{node.operation}' to types '{left_type}' and '{right_type}'")
+                    return None
+            case ast.NullLiteral():
+                return "null"
+            case ast.BooleanLiteral():
+                return "bool"
+            case ast.NumberLiteral():
+                return "int"
+            case ast.StringLiteral():
+                return "string"
+            case ast.DecimalLiteral():
+                return "decimal"
+            case ast.Identifier():
+                var_name = node.name
+                if var_name in self.symbol_table:
+                    return self.symbol_table[var_name]
+                else:
+                    print(f"Type error: Undefined variable '{var_name}'")
                     return None
             case _:
                 print(f"Type checking not implemented for node type: {type(node).__name__}")

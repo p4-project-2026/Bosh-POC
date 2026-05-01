@@ -1,7 +1,7 @@
 from bosh.pre_processor.pre_processor import PreProcessor
 from bosh.parser.parser import parseBosh
 from pathlib import Path
-
+from bosh.semantics.type_checker import TypeChecker
 from bosh.app.print import *
 
 
@@ -20,7 +20,8 @@ def controller(bosh_file_path):
     vvprint(indent(ast))
 
     vprint("Analyzing...")
-    # Semantisk analyse
+    type_checker = TypeChecker()
+    type_checker.check(ast)
     #print("Analyzed.")
 
     vprint("Executing...")
