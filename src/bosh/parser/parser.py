@@ -22,8 +22,8 @@ def parseBosh(processed_code):
 # Hver metode i klassen svarer til en regel i vores grammar
 class BoshTransformer(Transformer):
     def program(self, args):
-        block = args[0]
-        return Program(statements=block.statements)
+        return Program(block=args[0])
+    
 
     def block(self, args):
         return Block(statements=args)

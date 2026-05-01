@@ -9,8 +9,8 @@ class ASTNode: pass
 @dataclass
 class Program(ASTNode):
     # Betyder at det er en liste af statements, og hver statement er en ASTNode (f.eks. PrintStatement, VarDeclaration, etc.) *mangler implementering
-    statements: List[ASTNode]
-
+    block: Block
+    
 @dataclass
 class Block(ASTNode):
     statements: List[ASTNode]
@@ -124,7 +124,7 @@ class Write(ASTNode):
 
 @dataclass
 class NumberLiteral(ASTNode):
-    value: float
+    value: int
 
 @dataclass
 class DecimalLiteral(ASTNode):
