@@ -12,16 +12,26 @@ class TypeChecker:
         match node:
             case ast.Program():
                 self.check(node.block)
+
             case ast.Block():
                 for stmt in node.statements:
                     self.check(stmt)
+
+            case ast.IfElse():
+                self.check(node.condition)
+                self.check(node.then_branch)
+                if node.else_branch:
+                    self.check(node.else_branch)
+
             case ast.Assign():
                 var_name = node.target.name
                 value_type = self.check(node.value)
                 if value_type is not None:
                     self.symbol_table[var_name] = value_type
+
             case ast.Print():
                 self.check(node.expression)
+
             case ast.BinaryOp():
                 left_type = self.check(node.left)
                 right_type = self.check(node.right)
@@ -32,8 +42,11 @@ class TypeChecker:
                             return "int"
                         elif left_type == "string" and right_type == "string":
                             return "string"
-                    case "equals":
+                    case "eq":
                         if left_type == right_type:
+                            return "bool"
+                    case "less_than":
+                        if left_type == "int" and right_type == "int":
                             return "bool"
                     case _:
                         print(f"Type error: Unsupported operator '{op}' for types '{left_type}' and '{right_type}'")
@@ -44,6 +57,7 @@ class TypeChecker:
                 else:
                     print(f"Type error: Cannot apply operator '{node.operator}' to types '{left_type}' and '{right_type}'")
                     return None
+                
             case ast.NullLiteral():
                 return "null"
             case ast.BooleanLiteral():
@@ -61,6 +75,8 @@ class TypeChecker:
                 else:
                     print(f"Type error: Undefined variable '{var_name}'")
                     return None
+                
+        
             case _:
                 print(f"Type checking not implemented for node type: {type(node).__name__}")
                 return None
