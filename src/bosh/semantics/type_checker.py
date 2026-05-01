@@ -35,12 +35,14 @@ class TypeChecker:
                     case "equals":
                         if left_type == right_type:
                             return "bool"
-                print(f"Type error: Unsupported operator '{op}' for types '{left_type}' and '{right_type}'")
+                    case _:
+                        print(f"Type error: Unsupported operator '{op}' for types '{left_type}' and '{right_type}'")
+                        return None
 
                 if left_type == right_type:
                     return left_type
                 else:
-                    print(f"Type error: Cannot apply operator '{node.operation}' to types '{left_type}' and '{right_type}'")
+                    print(f"Type error: Cannot apply operator '{node.operator}' to types '{left_type}' and '{right_type}'")
                     return None
             case ast.NullLiteral():
                 return "null"
