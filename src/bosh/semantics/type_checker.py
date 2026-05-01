@@ -16,21 +16,37 @@ class TypeChecker:
             case ast.Block():
                 for stmt in node.statements:
                     self.check(stmt)
+            # Definitions ----------------------------------------
+            case ast.Assign():
+                var_name = node.target.name
+                value_type = self.check(node.value)
+                if value_type is not None:
+                    self.symbol_table[var_name] = value_type
+            
+            case ast.AssignType():
+                pass #What is AssignType? Is it explicit conversion or just a way to double-check?
+
+            case ast.TaskDecl():
+                pass #How to handle function declarations?
+            
+            # General Statements ----------------------------------------
+
+            case ast.Print():
+                self.check(node.expression)
 
             case ast.IfElse():
                 self.check(node.condition)
                 self.check(node.then_branch)
                 if node.else_branch:
                     self.check(node.else_branch)
+            
+            case ast.Fallback():
+                self.check(node.primary_stmt)
+                self.check(node.fallback_stmt)
 
-            case ast.Assign():
-                var_name = node.target.name
-                value_type = self.check(node.value)
-                if value_type is not None:
-                    self.symbol_table[var_name] = value_type
+            
 
-            case ast.Print():
-                self.check(node.expression)
+            
 
             case ast.BinaryOp():
                 left_type = self.check(node.left)
@@ -68,6 +84,16 @@ class TypeChecker:
                 return "string"
             case ast.DecimalLiteral():
                 return "decimal"
+            case ast.ListLiteral():
+                if len(node.elements) == 0:
+                    return "list<unknown>"
+                element_type = self.check(node.elements[0])
+                for elem in node.elements[1:]:
+                    if self.check(elem) != element_type:
+                        print("Type error: List elements must all be of the same type")
+                        return None
+                return f"list<{element_type}>"
+            
             case ast.Identifier():
                 var_name = node.name
                 if var_name in self.symbol_table:
