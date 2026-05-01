@@ -12,7 +12,6 @@ def parseBosh(processed_code):
     parser = Lark(grammar, start="program", parser="lalr")
 
     tree = parser.parse(processed_code)
-    print("Parse Tree:\n" + str(tree.pretty()))
 
     ast = BoshTransformer().transform(tree)
     return ast
