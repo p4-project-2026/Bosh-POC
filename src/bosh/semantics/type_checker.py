@@ -3,7 +3,7 @@ from platform import node
 from typing import Optional, Dict
 from unittest import case
 import bosh.parser.ast_nodes as ast
-from symbol_table import SymbolTable
+from .symbol_table import SymbolTable
 
 class TypeChecker:
     # globalt scope
