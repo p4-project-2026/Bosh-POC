@@ -3,11 +3,12 @@ from platform import node
 from typing import Optional, Dict
 from unittest import case
 import bosh.parser.ast_nodes as ast
+from symbol_table import SymbolTable
 
 class TypeChecker:
+    # globalt scope
     def __init__(self):
-        self.symbol_table: Dict[str, str] = {}  # Variabelnavn -> type
-
+        self.symbol_table = SymbolTable() 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         match node:
             case ast.Program():
