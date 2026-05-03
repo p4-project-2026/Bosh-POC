@@ -22,7 +22,10 @@ class TypeChecker:
                 var_name = node.target.name
                 value_type = self.check(node.value)
                 if value_type is not None:
-                    self.symbol_table[var_name] = value_type
+                    if self.symbol_table.lookup(var_name):
+                        self.symbol_table.set(var_name, value_type)
+                    else:
+                        self.symbol_table.bind(var_name, value_type)
             
             case ast.AssignType():
                 pass #What is AssignType? Is it explicit conversion or just a way to double-check?
@@ -37,9 +40,16 @@ class TypeChecker:
 
             case ast.IfElse():
                 self.check(node.condition)
+                # Burde vi ikke tjekke at condition er bool?
+
+                self.symbol_table = self.symbol_table.new_scope() # New scope for then branch
                 self.check(node.then_branch)
+                self.symbol_table = self.symbol_table.parent # Exit then branch scope
+
                 if node.else_branch:
+                    self.symbol_table = self.symbol_table.new_scope() # New scope for else branch
                     self.check(node.else_branch)
+                    self.symbol_table = self.symbol_table.parent # Exit else branch scope
             
             case ast.Fallback():
                 self.check(node.primary_stmt)
@@ -98,7 +108,7 @@ class TypeChecker:
             case ast.Identifier():
                 var_name = node.name
                 if var_name in self.symbol_table:
-                    return self.symbol_table[var_name]
+                    return self.symbol_table.lookup[var_name]
                 else:
                     print(f"Type error: Undefined variable '{var_name}'")
                     return None
