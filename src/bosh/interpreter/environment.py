@@ -1,1 +1,6 @@
-# Scopes og typer
+
+class Environment:
+    # __init__
+    # bind
+    # lookup
+    pass

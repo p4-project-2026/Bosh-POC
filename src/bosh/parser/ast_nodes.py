@@ -1,16 +1,21 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
 
-# Laver dataklasser her og bruger dem i transformeren
-# Gør det også nemmere at arbejde med AST'en senere i interpreter og analyzer
+# AST Node Definitions for Bosh Language
 
-class ASTNode: pass
+class ASTNode:
+    # Reflection instead of accept method in each node class
+    def accept(self, visitor):
+        method_name = f"visit_{type(self).__name__}"
+        visitor_method = getattr(visitor, method_name, getattr(visitor, "general_visit", None))
+        if visitor_method is None:
+            raise Exception(f"No visit_{type(self).__name__} method")
+        return visitor_method(self)
 
 @dataclass
 class Program(ASTNode):
-    # Betyder at det er en liste af statements, og hver statement er en ASTNode (f.eks. PrintStatement, VarDeclaration, etc.) *mangler implementering
-    block: Block
-    
+    block: 'Block'
+
 @dataclass
 class Block(ASTNode):
     statements: List[ASTNode]
@@ -124,7 +129,7 @@ class Write(ASTNode):
 
 @dataclass
 class NumberLiteral(ASTNode):
-    value: int
+    value: float
 
 @dataclass
 class DecimalLiteral(ASTNode):
