@@ -8,7 +8,7 @@ from .symbol_table import SymbolTable
 class TypeChecker:
     # globalt scope
     def __init__(self):
-        self.symbol_table = SymbolTable() 
+        self.v_table = SymbolTable() 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         match node:
             case ast.Program():
@@ -22,10 +22,10 @@ class TypeChecker:
                 var_name = node.target.name
                 value_type = self.check(node.value)
                 if value_type is not None:
-                    if self.symbol_table.lookup(var_name):
-                        self.symbol_table.set(var_name, value_type)
+                    if self.v_table.lookup(var_name):
+                        self.v_table.set(var_name, value_type)
                     else:
-                        self.symbol_table.bind(var_name, value_type)
+                        self.v_table.bind(var_name, value_type)
             
             case ast.AssignType():
                 pass #What is AssignType? Is it explicit conversion or just a way to double-check?
@@ -42,14 +42,14 @@ class TypeChecker:
                 self.check(node.condition)
                 # Burde vi ikke tjekke at condition er bool?
 
-                self.symbol_table = self.symbol_table.new_scope() # New scope for then branch
+                self.v_table = self.v_table.new_scope() # New scope for then branch
                 self.check(node.then_branch)
-                self.symbol_table = self.symbol_table.parent # Exit then branch scope
+                self.v_table = self.v_table.parent # Exit then branch scope
 
                 if node.else_branch:
-                    self.symbol_table = self.symbol_table.new_scope() # New scope for else branch
+                    self.v_table = self.v_table.new_scope() # New scope for else branch
                     self.check(node.else_branch)
-                    self.symbol_table = self.symbol_table.parent # Exit else branch scope
+                    self.v_table = self.v_table.parent # Exit else branch scope
             
             case ast.Fallback():
                 self.check(node.primary_stmt)
@@ -107,8 +107,8 @@ class TypeChecker:
             
             case ast.Identifier():
                 var_name = node.name
-                if var_name in self.symbol_table:
-                    return self.symbol_table.lookup[var_name]
+                if var_name in self.v_table:
+                    return self.v_table.lookup[var_name]
                 else:
                     print(f"Type error: Undefined variable '{var_name}'")
                     return None
