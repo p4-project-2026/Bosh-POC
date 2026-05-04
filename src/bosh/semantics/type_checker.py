@@ -4,7 +4,7 @@ from .symbol_table import SymbolTable
 
 class TypeChecker:
     def __init__(self):
-        self.v_table = SymbolTable()
+        self.v_table = SymbolTable(str)
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         return node.accept(self)
