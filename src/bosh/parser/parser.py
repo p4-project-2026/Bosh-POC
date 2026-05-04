@@ -21,7 +21,8 @@ def parseBosh(processed_code):
 # Hver metode i klassen svarer til en regel i vores grammar
 class BoshTransformer(Transformer):
     def program(self, args):
-        return Program(statements=args)
+        return Program(block=args[0])
+    
 
     def block(self, args):
         return Block(statements=args)
@@ -109,12 +110,10 @@ class BoshTransformer(Transformer):
         return BinaryOp(operator="and", left=args[0], right=args[1])
 
     def eq(self, args):
-        right_side = str(args[1].value) if hasattr(args[1], "value") else args[1]
-        return BinaryOp(operator="eq", left=args[0], right=right_side)
+        return BinaryOp(operator="eq", left=args[0], right=args[1])
 
     def neq(self, args):
-        right_side = str(args[1].value) if hasattr(args[1], "value") else args[1]
-        return BinaryOp(operator="neq", left=args[0], right=right_side)
+        return BinaryOp(operator="neq", left=args[0], right=args[1])
 
     def gt(self, args):
         return BinaryOp(operator="gt", left=args[0], right=args[1])
