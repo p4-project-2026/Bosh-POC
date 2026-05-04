@@ -4,7 +4,7 @@ from .symbol_table import SymbolTable
 
 class TypeChecker:
     def __init__(self):
-        self.symbol_table = SymbolTable()
+        self.v_table = SymbolTable()
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         return node.accept(self)
@@ -27,10 +27,10 @@ class TypeChecker:
         value_type = node.value.accept(self)
 
         if value_type is not None:
-            if self.symbol_table.lookup(var_name):
-                self.symbol_table.set(var_name, value_type)
+            if self.v_table.lookup(var_name):
+                self.v_table.set(var_name, value_type)
             else:
-                self.symbol_table.bind(var_name, value_type)
+                self.v_table.bind(var_name, value_type)
         return value_type
 
     def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
@@ -41,10 +41,10 @@ class TypeChecker:
         if value_type and value_type != var_type:
             print(f"Type error: Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'")
             return None
-        if self.symbol_table.lookup(var_name):
-            self.symbol_table.set(var_name, var_type)
+        if self.v_table.lookup(var_name):
+            self.v_table.set(var_name, var_type)
         else:
-            self.symbol_table.bind(var_name, var_type)
+            self.v_table.bind(var_name, var_type)
         return var_type
 
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
@@ -63,16 +63,16 @@ class TypeChecker:
             print(f"Type error: Condition in if statement must be of type 'bool', got '{condition_type}'")
             return None
 
-        saved = self.symbol_table
-        self.symbol_table = self.symbol_table.new_scope() # New scope for then branch
+        saved = self.v_table
+        self.v_table = self.v_table.new_scope() # New scope for then branch
         node.then_branch.accept(self)
-        self.symbol_table = saved # Exit then branch scope
+        self.v_table = saved # Exit then branch scope
 
         if node.else_branch:
-            saved = self.symbol_table
-            self.symbol_table = self.symbol_table.new_scope() # New scope for else branch
+            saved = self.v_table
+            self.v_table = self.v_table.new_scope() # New scope for else branch
             node.else_branch.accept(self)
-            self.symbol_table = saved # Exit else branch scope
+            self.v_table = saved # Exit else branch scope
         return None
 
     def visit_Fallback(self, node: ast.Fallback) -> Optional[str]:
@@ -139,7 +139,7 @@ class TypeChecker:
     
     def visit_Identifier(self, node: ast.Identifier) -> Optional[str]:
         var_name = node.name
-        var_type = self.symbol_table.lookup(var_name)
+        var_type = self.v_table.lookup(var_name)
         if var_type is None:
             print(f"Type error: Undefined variable '{var_name}'")
         return var_type
