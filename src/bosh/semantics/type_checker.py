@@ -1,10 +1,10 @@
 from typing import Optional
 import bosh.parser.ast_nodes as ast
-from .symbol_table import SymbolTable
+from .symbol_table import SymbolTable, ScopeStack
 
 class TypeChecker:
     def __init__(self):
-        self.v_table = SymbolTable(str)
+        self.v_table = ScopeStack[str]()
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         return node.accept(self)
@@ -27,10 +27,12 @@ class TypeChecker:
         value_type = node.value.accept(self)
 
         if value_type is not None:
-            if self.v_table.lookup(var_name):
-                self.v_table.set(var_name, value_type)
-            else:
+            try:
                 self.v_table.bind(var_name, value_type)
+            except Exception as e:
+                print(f"Type error: {e}")
+                return None
+            #Assign should not return anything?
         return value_type
 
     def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
@@ -41,11 +43,15 @@ class TypeChecker:
         if value_type and value_type != var_type:
             print(f"Type error: Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'")
             return None
-        if self.v_table.lookup(var_name):
-            self.v_table.set(var_name, var_type)
-        else:
+        try:
             self.v_table.bind(var_name, var_type)
-        return var_type
+            return var_type
+        except Exception as e:
+            print(f"Type error: {e}")
+            return None
+        #staitment should not return anything?
+        
+        
 
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
         # TODO: Check that the body of the function is type correct, and that it returns the correct type if it has a return type annotation
@@ -63,16 +69,15 @@ class TypeChecker:
             print(f"Type error: Condition in if statement must be of type 'bool', got '{condition_type}'")
             return None
 
-        saved = self.v_table
-        self.v_table = self.v_table.new_scope() # New scope for then branch
+
+        self.v_table.new_scope() # New scope for then branch
         node.then_branch.accept(self)
-        self.v_table = saved # Exit then branch scope
+        self.v_table.exit_scope() # Exit then branch scope
 
         if node.else_branch:
-            saved = self.v_table
-            self.v_table = self.v_table.new_scope() # New scope for else branch
+            self.v_table.new_scope() # New scope for else branch
             node.else_branch.accept(self)
-            self.v_table = saved # Exit else branch scope
+            self.v_table.exit_scope() # Exit else branch scope
         return None
 
     def visit_Fallback(self, node: ast.Fallback) -> Optional[str]:
@@ -139,7 +144,11 @@ class TypeChecker:
     
     def visit_Identifier(self, node: ast.Identifier) -> Optional[str]:
         var_name = node.name
-        var_type = self.v_table.lookup(var_name)
-        if var_type is None:
-            print(f"Type error: Undefined variable '{var_name}'")
-        return var_type
+        try:
+            var_type = self.v_table.lookup(var_name)
+        except Exception as e:
+            print(f"Type error: {e}")
+            return None
+#        if var_type is None:
+#            print(f"Type error: Undefined variable '{var_name}'")
+#        return var_type
