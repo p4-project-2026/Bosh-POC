@@ -1,9 +1,9 @@
 from typing import Optional, Dict, List
 
-class SymbolTable:
+class SymbolTable(Generic[T]):
     def __init__(self, parent: Optional['SymbolTable'] = None):
         self.parent = parent # For nested scopes
-        self.table: Dict[str, str] = {}  # Variabelnavn -> type
+        self.table: Dict[str, T] = {}  # Variabelnavn -> type
         
     def new_scope(self) -> 'SymbolTable':
         return SymbolTable(parent=self)
@@ -11,23 +11,23 @@ class SymbolTable:
     # --- vtable ---
 
     # Bind a variable to a type in the LOCAL scope
-    def bind(self, name: str, type_name: str):
+    def bind(self, name: str, type: T):
         # Måske unødvendig exception, sørger for at vi ikke overskriver eksisterende variable i samme block
         if name in self.table:
             raise Exception(f"Variable '{name}' already bound in local scope.")
-        self.table[name] = type_name
+        self.table[name] = type
 
     # Update an existing variable's type, by searching recursively through current scope, then parent scopes
-    def set(self, name: str, type_name: str):
+    def set(self, name: str, type: T):
         if name in self.table:
-            self.table[name] = type_name
+            self.table[name] = type
         elif self.parent is not None:
-            self.parent.set(name, type_name)
+            self.parent.set(name, type)
         else:
             raise Exception(f"Variable '{name}' not found in any scope.")
 
     # Lookup a variable's type recursively through current scope, then parent scopes
-    def lookup(self, name: str) -> Optional[str]:
+    def lookup(self, name: str) -> Optional[T]:
         if name in self.table:
             return self.table[name]
         elif self.parent is not None:
