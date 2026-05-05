@@ -98,6 +98,7 @@ block:   stmt (_SEP stmt)* _SEP?
         | FLOAT  -> decimal
         | STRING -> text
         | BOOLEAN -> boolean
+        | "(" term ("," term)* ")" -> list
         | "null" -> null
         | "now"  -> now
         | "here" -> here
