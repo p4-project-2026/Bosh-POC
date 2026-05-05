@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 import bosh.abstract_syntax.ast_nodes as ast
 from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
@@ -114,7 +114,7 @@ class TypeChecker:
         iterable_type = node.iterable.accept(self)
         if iterable_type is None:
             return None
-        if not (iterable_type.startswith("list<") and iterable_type.endswith(">")):
+        if iterable_type != "list":
             self.error_handler.report_error(
                 message=f"Iterable in for all statement must be of type 'list', got '{iterable_type}'",
                 error_type=TypeCheckError,
@@ -123,7 +123,7 @@ class TypeChecker:
             )
             return None
         # Extract element type
-        element_type = iterable_type[5:-1]
+        element_type = "any"
 
         # Scoping
         self.v_table.new_scope()
@@ -133,7 +133,7 @@ class TypeChecker:
         except Exception as e:
             self.error_handler.report_error(
                 message=str(e),
-                error_type=TypeChecker,
+                error_type=TypeCheckError,
                 node=node,
             )
         finally:
@@ -157,11 +157,28 @@ class TypeChecker:
         return None
     
     def visit_ListAdd(self, node: ast.ListAdd) -> Optional[str]:
-        #TODO: Implement ListAdd statement
+        target_type = node.target.accept(self)
+        node.item.accept(self) # Just check that the item is type correct, but we don't care about its type for type checking the ListAdd statement itself. Hjalmar note: wtf copilot comment
+
+        if target_type != "list" and target_type != "any":
+            self.error_handler.report_error(
+                message=f"Cannot add to type '{target_type}'. Can only add to lists.",
+                error_type=TypeCheckError,
+                node=node.target
+            )
+        
         return None
 
     def visit_ListRemove(self, node: ast.ListRemove) -> Optional[str]:
-        #TODO: Implement ListRemove statement
+        target_type = node.target.accept(self)
+        node.item.accept(self)
+
+        if target_type != "list" and target_type != "any":
+            self.error_handler.report_error(
+                message=f"Cannot remove from type '{target_type}'. Can only remove from lists.",
+                error_type=TypeCheckError,
+                node=node.target
+            )
         return None
     
     def visit_Return(self, node: ast.Return) -> Optional[str]:
@@ -171,7 +188,15 @@ class TypeChecker:
 # Domain Statements ----------------------------------------
         
     def visit_GoTo(self, node: ast.Goto) -> Optional[str]:
-        #TODO: Implement GoTo statement
+        path_type = node.path.accept(self)
+        valid_path_types = ["text", "folder"]
+
+        if path_type not in valid_path_types:
+            self.error_handler.report_error(
+                message=f"Invalid path type for 'go to': '{path_type}'. Expected 'text' or 'folder'.",
+                error_type=TypeCheckError,
+                node=node.path
+            )
         return None
     
     def visit_Make(self, node: ast.Make) -> Optional[str]:
@@ -221,7 +246,7 @@ class TypeChecker:
     
     def visit_ListLiteral(self, node: ast.ListLiteral) -> Optional[str]:
         if len(node.elements) == 0:
-            return "list<unknown>"
+            return "list<any>"
         element_type = node.elements[0].accept(self)
         for elem in node.elements[1:]:
             if elem.accept(self) != element_type:
