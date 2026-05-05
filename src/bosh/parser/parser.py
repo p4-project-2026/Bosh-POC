@@ -318,6 +318,11 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
+    def list(self, meta, args):
+        node = ListLiteral(elements=args)
+        node.set_meta(meta, self._filename)
+        return node
+
     def now(self, meta, args):
         node = AccessOp(target=None, operation="now")
         node.set_meta(meta, self._filename)

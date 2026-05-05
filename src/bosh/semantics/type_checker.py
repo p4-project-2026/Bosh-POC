@@ -28,9 +28,9 @@ class TypeChecker:
             stmt.accept(self)
         return None
 
-    # Definitions ----------------------------------------
+# Definitions ----------------------------------------
 
-    def visit_Assign(self, node: ast.Assign):
+    def visit_Assign(self, node: ast.Assign) -> Optional[str]: 
         var_name = node.target.name
         value_type = node.value.accept(self)
 
@@ -43,7 +43,7 @@ class TypeChecker:
             #Assign should not return anything?
         
 
-    def visit_AssignType(self, node: ast.AssignType):
+    def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
         # Checks that the assigned value matches the declared type, and registers the variable with that type
         var_name = node.target.name
         var_type = node.var_type
@@ -75,7 +75,12 @@ class TypeChecker:
         # No idea how to implemnet ftable
         return None
 
-    # General Statements ----------------------------------------
+# General Statements ----------------------------------------
+
+    def visit_Print(self, node: ast.Print) -> Optional[str]:
+        value = node.expression.accept(self)
+        print(value)
+        return None
 
     def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:
         condition_type = node.condition.accept(self)
@@ -87,7 +92,6 @@ class TypeChecker:
                 details={"condition_type": condition_type},
             )
             return None
-
 
         self.v_table.new_scope() # New scope for then branch
         node.then_branch.accept(self)
@@ -105,7 +109,34 @@ class TypeChecker:
         return None
     
     def visit_ForAll(self, node: ast.ForAll) -> Optional[str]:
-        #TODO: implement
+        iterable_type = node.iterable.accept(self)
+        if iterable_type is None:
+            return None
+        if not (iterable_type.startswith("list<") and iterable_type.endswith(">")):
+            self.error_handler.report_error(
+                message=f"Iterable in for all statement must be of type 'list', got '{iterable_type}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"iterable_type": iterable_type},
+            )
+            return None
+        # Extract element type
+        element_type = iterable_type[5:-1]
+
+        # Scoping
+        self.v_table.new_scope()
+        try:
+            self.v_table.bind(node.iterator_name, element_type)
+            node.body.accept(self)
+        except Exception as e:
+            self.error_handler.report_error(
+                message=str(e),
+                error_type=TypeChecker,
+                node=node,
+            )
+        finally:
+            self.v_table.exit_scope()
+
         return None
 
     def visit_RepeatUntil(self, node: ast.RepeatUntil) -> Optional[str]:
@@ -114,23 +145,69 @@ class TypeChecker:
     
     def visit_Quit(self, node: ast.Quit) -> Optional[str]:
         return None
-
-    # Literals and Identifiers ----------------------------------------
-
-    def visit_NullLiteral(self, node: ast.NullLiteral) -> Optional[str]:
-        return "null"
     
-    def visit_BooleanLiteral(self, node: ast.BooleanLiteral) -> Optional[str]:
-        return "bool"
+    def visit_ListAdd(self, node: ast.ListAdd) -> Optional[str]:
+        #TODO: Implement ListAdd statement
+        return None
+
+    def visit_ListRemove(self, node: ast.ListRemove) -> Optional[str]:
+        #TODO: Implement ListRemove statement
+        return None
     
+    def visit_Return(self, node: ast.Return) -> Optional[str]:
+        #TODO: Implement return statement
+        return None
+    
+# Domain Statements ----------------------------------------
+        
+    def visit_GoTo(self, node: ast.Goto) -> Optional[str]:
+        #TODO: Implement GoTo statement
+        return None
+    
+    def visit_Make(self, node: ast.Make) -> Optional[str]:
+        #TODO: Implement Make statement
+        return None
+    
+    def visit_Delete(self, node: ast.Delete) -> Optional[str]:
+        #TODO: Implement Delete statement
+        return None
+    
+    def visit_Rename(self, node: ast.Rename) -> Optional[str]:
+        #TODO: Implement Rename statement
+        return None
+
+    def visit_Copy(self, node: ast.Copy) -> Optional[str]:
+        #TODO: Implement Copy statement
+        return None
+    
+    def visit_Move(self, node: ast.Move) -> Optional[str]:
+        #TODO: Implement Move statement
+        return None
+    
+    def visit_Read(self, node: ast.Read) -> Optional[str]:
+        #TODO: Implement Read statement
+        return None
+    
+    def visit_Write(self, node: ast.Write) -> Optional[str]:
+        #TODO: Implement Write statement
+        return None
+
+# Literals and Identifiers ----------------------------------------
+
     def visit_NumberLiteral(self, node: ast.NumberLiteral) -> Optional[str]:
         return "int"
+    
+    def visit_DecimalLiteral(self, node: ast.DecimalLiteral) -> Optional[str]:
+        return "decimal"
     
     def visit_StringLiteral(self, node: ast.StringLiteral) -> Optional[str]:
         return "string"
     
-    def visit_DecimalLiteral(self, node: ast.DecimalLiteral) -> Optional[str]:
-        return "decimal"
+    def visit_BooleanLiteral(self, node: ast.BooleanLiteral) -> Optional[str]:
+        return "bool"
+    
+    def visit_NullLiteral(self, node: ast.NullLiteral) -> Optional[str]:
+        return "null"
     
     def visit_ListLiteral(self, node: ast.ListLiteral) -> Optional[str]:
         if len(node.elements) == 0:
@@ -160,7 +237,19 @@ class TypeChecker:
             )
 #        return var_type
     
-    # Expressions ----------------------------------------
+    def visit_TaskIdentifier(self, node: ast.TaskIdentifier) -> Optional[str]:
+        #TODO: Implement task identifier lookup
+        return None
+
+# Expressions ----------------------------------------
+
+    def visit_TaskCall(self, node: ast.TaskCall) -> Optional[str]:
+        #TODO: Implement task call evaluation
+        return None
+    
+    def visit_ListLookup(self, node: ast.ListLookup) -> Optional[str]:
+        #TODO: Implement list lookup evaluation
+        return None
 
     def visit_BinaryOp(self, node: ast.BinaryOp) -> Optional[str]:
         left_type = node.left.accept(self)
@@ -198,3 +287,12 @@ class TypeChecker:
             )
             return None
     
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> Optional[str]:
+        #TODO: Implement unary operation evaluation
+        operand_value = node.operand.accept(self)
+        if node.operator == '-':
+            return -operand_value
+        elif node.operator == '!':
+            return not operand_value
+        else:
+            raise ValueError(f"Unsupported unary operator: {node.operator}")
