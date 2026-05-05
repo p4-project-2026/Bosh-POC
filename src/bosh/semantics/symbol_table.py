@@ -20,6 +20,13 @@ class SymbolTable(Generic[T]):
     # --- vtable ---
 
     # Bind a variable to a type in the LOCAL scope
+    def bind_local(self, name: str, type_value: T):
+        if name in self.table:
+            if self.table[name] != type_value:
+                raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
+            return # If variable is already bound to the same type, do nothing
+        self.table[name] = type_value
+
     def bind(self, name: str, type_value: T):
         # Måske unødvendig exception, sørger for at vi ikke overskriver eksisterende variable i samme block
         if name in self.table:
@@ -56,16 +63,10 @@ class SymbolTable(Generic[T]):
         
         raise Exception(f"Variable '{name}' not found in any scope.")
     
-    # Check if varable is defined in the current scope
+    # Check if variable is defined in the current scope
     def is_local(self, name: str) -> bool:
         return name in self.table
-    
-#    def is_in_persistent_scope_and_same_type(self, name: str, type_value: T) -> bool:
-#        if name in self.table:
-#            return True
-#        elif self.persistent and self.parent is not None:
-#            return self.parent.is_in_persistent_scope(name)
-#        return False
+
     
     # Return all variable names defined in the current scope, and combine with parent scopes
     def domain(self) -> List[str]:
@@ -74,6 +75,13 @@ class SymbolTable(Generic[T]):
         if self.parent:
             keys.update(self.parent.domain())
         return list(keys)
+    
+#    def is_in_persistent_scope_and_same_type(self, name: str, type_value: T) -> bool:
+#        if name in self.table:
+#            return True
+#        elif self.persistent and self.parent is not None:
+#            return self.parent.is_in_persistent_scope(name)
+#        return False
     
     # Mayhaps implement clone from dims:
     # det er til closures.
