@@ -1,9 +1,10 @@
 from pathlib import Path
-import  sys
+import sys
 
 from bosh.app.controller import controller
 from bosh.app.flags import Flags
 from bosh.app.print import *
+from bosh.error_handler import TypeCheckError, RuntimeError as BoshRuntimeError, ErrorHandler
 
 def main():
     # extract flags from arguments
@@ -32,7 +33,10 @@ def main():
 
     vprint(f"executing file: {bosh_file_path} with flags: {flags} and arguments: {args}")
 
-    controller(bosh_file_path)
+    try:
+        controller(bosh_file_path)
+    except (TypeCheckError, SyntaxError, BoshRuntimeError) as e:
+        print("\n" + indent(str(e)))
 
 
 if __name__ == "__main__":

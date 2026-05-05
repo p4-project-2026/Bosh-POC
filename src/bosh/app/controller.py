@@ -3,6 +3,7 @@ from bosh.parser.parser import parseBosh
 from pathlib import Path
 from bosh.semantics.type_checker import TypeChecker
 from bosh.app.print import *
+from bosh.interpreter.interpreter import Interpreter
 
 
 def controller(bosh_file_path):
@@ -16,7 +17,7 @@ def controller(bosh_file_path):
     vvprint(indent(processed_code))
 
     vprint("Parsing...")
-    ast = parseBosh(processed_code)
+    ast = parseBosh(processed_code, filename=bosh_file_path)
     vvprint(indent(ast))
 
     vprint("Analyzing...")

@@ -1,7 +1,6 @@
-from lark import Interpreter
+from bosh.interpreter.environment import Environment
 
-class Interpreter(Interpreter):
+class Interpreter:
     # __init__
-    # evaluate
-    # visit_...
-    pass
+    def __init__(self):
+        self.env = Environment()
