@@ -1,7 +1,7 @@
 from platform import node
 
 from .environment import Environment
-import bosh.parser.ast_nodes as ast
+import bosh.abstract_syntax.ast_nodes as ast
 
 class Executor:
     # __init__

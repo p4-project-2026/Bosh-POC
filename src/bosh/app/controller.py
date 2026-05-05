@@ -5,7 +5,7 @@ from bosh.parser.parser import parseBosh
 from pathlib import Path
 from bosh.semantics.type_checker import TypeChecker
 from bosh.app.print import *
-from bosh.interpreter.interpreter import Interpreter
+from bosh.executor.executor import Executor
 
 
 def controller(bosh_file_path):
