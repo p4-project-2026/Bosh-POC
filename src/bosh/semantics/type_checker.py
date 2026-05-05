@@ -1,11 +1,11 @@
 from typing import Optional
 import bosh.abstract_syntax.ast_nodes as ast
-from .symbol_table import SymbolTable
+from .symbol_table import SymbolTable, ScopeStack
 from ..error_handler import ErrorHandler, TypeCheckError
 
 class TypeChecker:
     def __init__(self):
-        self.v_table = SymbolTable()
+        self.v_table = ScopeStack[str]()
         self.error_handler = ErrorHandler()
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
@@ -29,18 +29,20 @@ class TypeChecker:
 
     # Definitions ----------------------------------------
 
-    def visit_Assign(self, node: ast.Assign) -> Optional[str]:
+    def visit_Assign(self, node: ast.Assign):
         var_name = node.target.name
         value_type = node.value.accept(self)
 
         if value_type is not None:
-            if self.v_table.lookup(var_name):
-                self.v_table.set(var_name, value_type)
-            else:
+            try:
                 self.v_table.bind(var_name, value_type)
-        return value_type
+            except Exception as e:
+                print(f"Type error: {e}")
+                return 
+            #Assign should not return anything?
+        
 
-    def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
+    def visit_AssignType(self, node: ast.AssignType):
         # Checks that the assigned value matches the declared type, and registers the variable with that type
         var_name = node.target.name
         var_type = node.var_type
@@ -52,12 +54,20 @@ class TypeChecker:
                 node=node,
                 details={"expected": var_type, "actual": value_type},
             )
-            return None
-        if self.v_table.lookup(var_name):
-            self.v_table.set(var_name, var_type)
-        else:
+            return
+        try:
             self.v_table.bind(var_name, var_type)
-        return var_type
+            return
+        except Exception as e:
+            self.error_handler.report_error(
+                message=str(e),
+                error_type=TypeCheckError,
+                node=node,
+            )
+            return
+        #staitment should not return anything?
+        
+        
 
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
         # TODO: Check that the body of the function is type correct, and that it returns the correct type if it has a return type annotation
@@ -80,16 +90,15 @@ class TypeChecker:
             )
             return None
 
-        saved = self.v_table
-        self.v_table = self.v_table.new_scope() # New scope for then branch
+
+        self.v_table.new_scope() # New scope for then branch
         node.then_branch.accept(self)
-        self.v_table = saved # Exit then branch scope
+        self.v_table.exit_scope() # Exit then branch scope
 
         if node.else_branch:
-            saved = self.v_table
-            self.v_table = self.v_table.new_scope() # New scope for else branch
+            self.v_table.new_scope() # New scope for else branch
             node.else_branch.accept(self)
-            self.v_table = saved # Exit else branch scope
+            self.v_table.exit_scope() # Exit else branch scope
         return None
 
     def visit_Fallback(self, node: ast.Fallback) -> Optional[str]:
@@ -142,15 +151,16 @@ class TypeChecker:
     
     def visit_Identifier(self, node: ast.Identifier) -> Optional[str]:
         var_name = node.name
-        var_type = self.v_table.lookup(var_name)
-        if var_type is None:
+        try:
+            var_type = self.v_table.lookup(var_name)
+        except Exception as e:
             self.error_handler.report_error(
                 message=f"Undefined variable '{var_name}'",
                 error_type=TypeCheckError,
                 node=node,
                 details={"name": var_name},
             )
-        return var_type
+#        return var_type
     
     # Expressions ----------------------------------------
 
