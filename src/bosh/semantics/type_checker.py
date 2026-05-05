@@ -22,7 +22,7 @@ class TypeChecker:
 
     # Definitions ----------------------------------------
 
-    def visit_Assign(self, node: ast.Assign) -> Optional[str]:
+    def visit_Assign(self, node: ast.Assign):
         var_name = node.target.name
         value_type = node.value.accept(self)
 
@@ -31,24 +31,24 @@ class TypeChecker:
                 self.v_table.bind(var_name, value_type)
             except Exception as e:
                 print(f"Type error: {e}")
-                return None
+                return 
             #Assign should not return anything?
-        return value_type
+        
 
-    def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
+    def visit_AssignType(self, node: ast.AssignType):
         # Checks that the assigned value matches the declared type, and registers the variable with that type
         var_name = node.target.name
         var_type = node.var_type
         value_type = node.value.accept(self) if node.value else None
         if value_type and value_type != var_type:
             print(f"Type error: Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'")
-            return None
+            return
         try:
             self.v_table.bind(var_name, var_type)
-            return var_type
+            return
         except Exception as e:
             print(f"Type error: {e}")
-            return None
+            return
         #staitment should not return anything?
         
         
