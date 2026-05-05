@@ -1,3 +1,5 @@
+from bosh.executor.executor import Executor
+
 from bosh.pre_processor.pre_processor import PreProcessor
 from bosh.parser.parser import parseBosh
 from pathlib import Path
@@ -26,5 +28,5 @@ def controller(bosh_file_path):
     #print("Analyzed.")
 
     vprint("Executing...")
-    # Interpreter
+    Executor().evaluate(ast)
     #print("Done.")
