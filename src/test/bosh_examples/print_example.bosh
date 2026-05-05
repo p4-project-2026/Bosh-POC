@@ -1,2 +1,7 @@
-Message is "Testing...".
-say "@Message".
+Message is 5+true
+say Message
+
+Message is 2+3*4
+say Message
+if Message
+    say "hello"
