@@ -140,7 +140,15 @@ class TypeChecker:
         return None
 
     def visit_RepeatUntil(self, node: ast.RepeatUntil) -> Optional[str]:
-        #TODO: implement
+        condition_type = node.condition.accept(self)
+        if condition_type != "bool":
+            self.error_handler.report_error(
+                message=f"Condition in repeat until statement must be of type 'bool', got '{condition_type}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"condition_type": condition_type},
+            )
+        node.body.accept(self)
         return None
     
     def visit_Quit(self, node: ast.Quit) -> Optional[str]:
