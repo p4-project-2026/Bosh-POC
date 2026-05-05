@@ -77,9 +77,6 @@ class TypeChecker:
 
     # General Statements ----------------------------------------
 
-    def visit_Print(self, node: ast.Print) -> Optional[str]:
-        return node.expression.accept(self)
-
     def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:
         condition_type = node.condition.accept(self)
         if condition_type != "bool":
