@@ -1,16 +1,22 @@
 from typing import Optional
-import bosh.parser.ast_nodes as ast
+import bosh.abstract_syntax.ast_nodes as ast
 from .symbol_table import SymbolTable
+from ..error_handler import ErrorHandler, TypeCheckError
 
 class TypeChecker:
     def __init__(self):
         self.v_table = SymbolTable()
+        self.error_handler = ErrorHandler()
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
         return node.accept(self)
 
-    def general_visit(self, node: ast.ASTNode) -> Optional[str]:
-        print(f"Type checking not implemented for node type: {type(node).__name__}")
+    def default_visit(self, node: ast.ASTNode) -> Optional[str]:
+        self.error_handler.report_error(
+            message=f"Type checking not implemented for node type: {type(node).__name__}",
+            error_type=TypeCheckError,
+            node=node,
+        )
         return None
 
     def visit_Program(self, node: ast.Program) -> Optional[str]:
@@ -19,6 +25,7 @@ class TypeChecker:
     def visit_Block(self, node: ast.Block) -> Optional[str]:
         for stmt in node.statements:
             stmt.accept(self)
+        return None
 
     # Definitions ----------------------------------------
 
@@ -39,7 +46,12 @@ class TypeChecker:
         var_type = node.var_type
         value_type = node.value.accept(self) if node.value else None
         if value_type and value_type != var_type:
-            print(f"Type error: Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'")
+            self.error_handler.report_error(
+                message=f"Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"expected": var_type, "actual": value_type},
+            )
             return None
         if self.v_table.lookup(var_name):
             self.v_table.set(var_name, var_type)
@@ -60,7 +72,12 @@ class TypeChecker:
     def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:
         condition_type = node.condition.accept(self)
         if condition_type != "bool":
-            print(f"Type error: Condition in if statement must be of type 'bool', got '{condition_type}'")
+            self.error_handler.report_error(
+                message=f"Condition in if statement must be of type 'bool', got '{condition_type}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"condition_type": condition_type},
+            )
             return None
 
         saved = self.v_table
@@ -79,36 +96,17 @@ class TypeChecker:
         node.primary_stmt.accept(self)
         node.fallback_stmt.accept(self)
         return None
+    
+    def visit_ForAll(self, node: ast.ForAll) -> Optional[str]:
+        #TODO: implement
+        return None
 
-    # Expressions ----------------------------------------
-
-    def visit_BinaryOp(self, node: ast.BinaryOp) -> Optional[str]:
-        left_type = node.left.accept(self)
-        right_type = node.right.accept(self)
-        op = node.operator
-        # What if you say "true + true"?
-        # It would fall through the match/case and then return left_type, but we disallow bool+bool
-        match op:
-            case "plus":
-                if left_type == "int" and right_type == "int":
-                    return "int"
-                elif left_type == "string" and right_type == "string":
-                    return "string"
-            case "eq":
-                if left_type == right_type:
-                    return "bool"
-            case "less_than":
-                if left_type == "int" and right_type == "int":
-                    return "bool"
-            case _:
-                print(f"Type error: Unsupported operator '{op}' for types '{left_type}' and '{right_type}'")
-                return None
-
-        if left_type == right_type:
-            return left_type
-        else:
-            print(f"Type error: Cannot apply operator '{node.operator}' to types '{left_type}' and '{right_type}'")
-            return None
+    def visit_RepeatUntil(self, node: ast.RepeatUntil) -> Optional[str]:
+        #TODO: implement
+        return None
+    
+    def visit_Quit(self, node: ast.Quit) -> Optional[str]:
+        return None
 
     # Literals and Identifiers ----------------------------------------
 
@@ -133,7 +131,12 @@ class TypeChecker:
         element_type = node.elements[0].accept(self)
         for elem in node.elements[1:]:
             if elem.accept(self) != element_type:
-                print("Type error: List elements must all be of the same type")
+                self.error_handler.report_error(
+                    message="List elements must all be of the same type",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"expected": element_type},
+                )
                 return None
         return f"list<{element_type}>"
     
@@ -141,5 +144,49 @@ class TypeChecker:
         var_name = node.name
         var_type = self.v_table.lookup(var_name)
         if var_type is None:
-            print(f"Type error: Undefined variable '{var_name}'")
+            self.error_handler.report_error(
+                message=f"Undefined variable '{var_name}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"name": var_name},
+            )
         return var_type
+    
+    # Expressions ----------------------------------------
+
+    def visit_BinaryOp(self, node: ast.BinaryOp) -> Optional[str]:
+        left_type = node.left.accept(self)
+        right_type = node.right.accept(self)
+        op = node.operator
+        
+        if op in ["plus", "minus"]:
+            if left_type == right_type and left_type in ["int", "decimal"]:
+                return left_type
+            else:
+                self.error_handler.report_error(
+                    message=f"Operator '{op}' not supported for types '{left_type}' and '{right_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"left_type": left_type, "right_type": right_type},
+                )
+                return None
+        elif op in ["mult", "div"]:
+            if left_type == right_type and left_type in ["int", "decimal"]:
+                return left_type
+            else:
+                self.error_handler.report_error(
+                    message=f"Operator '{op}' not supported for types '{left_type}' and '{right_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"left_type": left_type, "right_type": right_type},
+                )
+                return None
+        else:
+            self.error_handler.report_error(
+                message=f"Unsupported operator '{op}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"operator": op},
+            )
+            return None
+    
