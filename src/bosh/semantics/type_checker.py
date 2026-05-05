@@ -1,6 +1,7 @@
 from typing import Optional
 import bosh.abstract_syntax.ast_nodes as ast
-from .symbol_table import SymbolTable, ScopeStack
+from .symbol_table import SymbolTable
+from .ScopeStack import ScopeStack
 from ..error_handler import ErrorHandler, TypeCheckError
 
 class TypeChecker:
