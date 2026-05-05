@@ -5,6 +5,7 @@ class PreProcessor:
     def run(self):
         self.whitespace_strip()
         self.insert_symbols_at_nested_indents()
+        self.insert_ifelse_symbol()
         return self.data
 
     def whitespace_strip(self):
@@ -24,7 +25,7 @@ class PreProcessor:
             if indent_level > indent_level_stack[-1]:
                 data[i-1] += " {"
                 indent_level_stack.append(indent_level)
-            else:
+            else: 
                 while indent_level < indent_level_stack[-1]:
                     data[i-1] += "}"
                     indent_level_stack.pop()
@@ -33,5 +34,15 @@ class PreProcessor:
             data[-1] += "}"
             indent_level_stack.pop()
 
+        self.data = "\n".join(data)
+        return self.data
+    
+    def insert_ifelse_symbol(self):
+        # inserts ~ between if and else branches
+        data = self.data.splitlines()
+        for i, line in enumerate(data):
+            next_line = data[i+1].strip() if i+1 < len(data) else ""
+            if next_line.startswith("else") or next_line.startswith("otherwise"):
+                data[i] += " ~"
         self.data = "\n".join(data)
         return self.data
