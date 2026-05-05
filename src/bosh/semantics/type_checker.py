@@ -70,11 +70,30 @@ class TypeChecker:
             return
         #staitment should not return anything?
         
-        
-
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
-        # TODO: Check that the body of the function is type correct, and that it returns the correct type if it has a return type annotation
-        # No idea how to implemnet ftable
+        param_types = ["any"] * len(node.parameters)
+        signature = FunctionSignature(param_types=param_types, return_type="any")
+        try:
+            self.f_table.bind(node.name, signature)
+        except Exception as e:
+            self.error_handler.report_error(
+                message=f"Task '{node.name}' is already defined.",
+                error_type=TypeCheckError,
+                node=node,
+            )
+        self.v_table.new_scope() # New scope for task body
+        try:
+            for param in node.parameters:
+                self.v_table.bind(param, "any")
+            # Return type
+            body_type = node.body.accept(self)
+            # Copilot autocomplete, tror det virker?
+            signature.return_type = body_type if body_type else "any"
+        
+        finally:
+            self.v_table.exit_scope()
+        
+        # return "task"?
         return None
 
 # General Statements ----------------------------------------
@@ -164,7 +183,7 @@ class TypeChecker:
             self.error_handler.report_error(
                 message=f"Cannot add to type '{target_type}'. Can only add to lists.",
                 error_type=TypeCheckError,
-                node=node.target
+                node=node
             )
         
         return None
@@ -177,54 +196,127 @@ class TypeChecker:
             self.error_handler.report_error(
                 message=f"Cannot remove from type '{target_type}'. Can only remove from lists.",
                 error_type=TypeCheckError,
-                node=node.target
+                node=node
             )
         return None
     
     def visit_Return(self, node: ast.Return) -> Optional[str]:
-        #TODO: Implement return statement
-        return None
+        return_type = node.value.accept(self)
+        return return_type
     
 # Domain Statements ----------------------------------------
         
     def visit_GoTo(self, node: ast.Goto) -> Optional[str]:
         path_type = node.path.accept(self)
-        valid_path_types = ["text", "folder"]
 
-        if path_type not in valid_path_types:
+        if path_type not in ["text", "folder"]:
             self.error_handler.report_error(
-                message=f"Invalid path type for 'go to': '{path_type}'. Expected 'text' or 'folder'.",
+                message=f"Path in go to statement must be of type 'text' or 'folder', got '{path_type}'",
                 error_type=TypeCheckError,
-                node=node.path
+                node=node
             )
         return None
     
     def visit_Make(self, node: ast.Make) -> Optional[str]:
-        #TODO: Implement Make statement
+        if node.entity_type not in ["file", "folder"]:
+             self.error_handler.report_error(
+                message=f"Entity type in make statement must be of type 'file' or 'folder', got '{node.entity_type}'",
+                error_type=TypeCheckError,
+                node=node
+            )
+        location_type = node.location.accept(self)
+        if location_type not in ["text", "folder"]:
+            self.error_handler.report_error(
+                message=f"Path in make statement must be of type 'text' or 'folder', got '{location_type}'",
+                error_type=TypeCheckError,
+                node=node
+            )
+        self.v_table.bind(node.name, node.entity_type)
+             
         return None
     
     def visit_Delete(self, node: ast.Delete) -> Optional[str]:
-        #TODO: Implement Delete statement
+        target_type = node.target.accept(self)
+        if target_type not in ["file", "folder", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot delete type '{target_type}'. Expected file, folder, or text.",
+                error_type=TypeCheckError,
+                node=node
+            )
         return None
     
     def visit_Rename(self, node: ast.Rename) -> Optional[str]:
-        #TODO: Implement Rename statement
+        target_type = node.target.accept(self)
+
+        if target_type not in ["file", "folder", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot rename type '{target_type}'. Expected file, folder, or text.",
+                error_type=TypeCheckError,
+                node=node
+            )
+        self.v_table.bind(node.new_name, target_type)
         return None
 
     def visit_Copy(self, node: ast.Copy) -> Optional[str]:
-        #TODO: Implement Copy statement
+        source_type = node.source.accept(self)
+        target_type = node.target.accept(self)
+
+        if source_type not in ["file", "folder", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot copy type '{source_type}'. Expected file, folder, or text.",
+                error_type=TypeCheckError,
+                node=node
+            )
+
+        if target_type not in ["folder", "text"]:
+            self.error_handler.report_error(
+                message=f"Target location in copy statement must be of type 'text' or 'folder', got '{target_type}'",
+                error_type=TypeCheckError,
+                node=node.target
+            )
         return None
     
     def visit_Move(self, node: ast.Move) -> Optional[str]:
-        #TODO: Implement Move statement
+        source_type = node.source.accept(self)
+        target_type = node.target.accept(self)
+
+        if source_type not in ["file", "folder", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot move type '{source_type}'. Expected file, folder, or text.",
+                error_type=TypeCheckError,
+                node=node
+            )
+        if target_type not in ["folder", "text"]:
+            self.error_handler.report_error(
+                message=f"Target location in move statement must be of type 'text' or 'folder', got '{target_type}'",
+                error_type=TypeCheckError,
+                node=node.target
+            )
         return None
     
     def visit_Read(self, node: ast.Read) -> Optional[str]:
-        #TODO: Implement Read statement
+        source_type = node.source.accept(self)
+
+        if source_type not in ["file", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot read type '{source_type}'. Expected file or text.",
+                error_type=TypeCheckError,
+                node=node
+            )
+    
+        self.v_table.bind(node.target_name, node.target_type)
         return None
     
     def visit_Write(self, node: ast.Write) -> Optional[str]:
-        #TODO: Implement Write statement
+        target_type = node.target.accept(self)
+        node.content.accept(self)
+
+        if target_type not in ["file", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot write to type '{target_type}'. Expected file or text.",
+                error_type=TypeCheckError,
+                node=node
+            )
         return None
 
 # Literals and Identifiers ----------------------------------------
@@ -270,20 +362,76 @@ class TypeChecker:
                 node=node,
                 details={"name": var_name},
             )
-#        return var_type
+#        return var_type?
     
     def visit_TaskIdentifier(self, node: ast.TaskIdentifier) -> Optional[str]:
-        #TODO: Implement task identifier lookup
-        return None
+        try:
+            self.f_table.lookup(node.name)
+            return "task"
+        except Exception as e:
+            self.error_handler.report_error(
+                message=f"Undefined task '{node.name}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"name": node.name},
+            )
+#       return var_type?
 
 # Expressions ----------------------------------------
 
     def visit_TaskCall(self, node: ast.TaskCall) -> Optional[str]:
-        #TODO: Implement task call evaluation
+        try:
+            signature = self.f_table.lookup(node.name)
+        except Exception as e:
+            self.error_handler.report_error(
+                message=f"Undefined task '{node.name}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"name": node.name},
+            )
+
+        # Check amount of arguments
+        if len(node.arguments) != len(signature.param_types):
+            self.error_handler.report_error(
+                message=f"Task '{node.name}' expects {len(signature.param_types)} arguments, but {len(node.arguments)} were provided.",
+                error_type=TypeCheckError,
+                node=node
+            )
+
+        # Check argument types
+        for i, arg in enumerate(node.arguments):
+            if i < len(signature.param_types): 
+                arg_type = arg.accept(self)
+                expected_type = signature.param_types[i]
+                if arg_type != expected_type:
+                    self.error_handler.report_error(
+                        message=f"Argument {i+1} of task '{node.name}' expects type '{expected_type}', but got '{arg_type}'.",
+                        error_type=TypeCheckError,
+                        node=node,
+                        details={"argument_index": i, "expected": expected_type, "actual": arg_type},
+                    )
+
         return None
     
     def visit_ListLookup(self, node: ast.ListLookup) -> Optional[str]:
-        #TODO: Implement list lookup evaluation
+        target_type = node.target.accept(self)
+        index_type = node.index.accept(self)
+
+        if target_type != "list":
+            self.error_handler.report_error(
+                message=f"Cannot index type '{target_type}'. Expected a list.",
+                error_type=TypeCheckError,
+                node=node,
+                details={"target_type": target_type},
+            )
+
+        if index_type != "number":
+            self.error_handler.report_error(
+                message=f"List index must be of type 'number', got '{index_type}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"index_type": index_type},
+            )
         return None
 
     def visit_BinaryOp(self, node: ast.BinaryOp) -> Optional[str]:
@@ -323,11 +471,27 @@ class TypeChecker:
             return None
     
     def visit_UnaryOp(self, node: ast.UnaryOp) -> Optional[str]:
-        #TODO: Implement unary operation evaluation
-        operand_value = node.operand.accept(self)
-        if node.operator == '-':
-            return -operand_value
-        elif node.operator == '!':
-            return not operand_value
-        else:
-            raise ValueError(f"Unsupported unary operator: {node.operator}")
+        operand_type = node.operand.accept(self)
+        op = node.operator
+
+        # negativ mangler i grammaren?
+        if op == "-":
+            if operand_type not in ["number", "decimal"]:
+                self.error_handler.report_error(
+                    message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'number' or 'decimal'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"operand_type": operand_type},
+                )
+                return None
+        elif op == "not":
+            # bool eller boolean? I am confusion
+            if operand_type != "bool":
+                self.error_handler.report_error(
+                    message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'bool'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"operand_type": operand_type},
+                )
+                return None
+        return None
