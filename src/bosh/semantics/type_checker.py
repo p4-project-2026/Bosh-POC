@@ -3,10 +3,12 @@ import bosh.abstract_syntax.ast_nodes as ast
 from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
 from ..error_handler import ErrorHandler, TypeCheckError
+from .FuncTable import FuncTable, FunctionSignature
 
 class TypeChecker:
     def __init__(self):
         self.v_table = ScopeStack[str]()
+        self.f_table = FuncTable()
         self.error_handler = ErrorHandler()
 
     def check(self, node: ast.ASTNode) -> Optional[str]:
