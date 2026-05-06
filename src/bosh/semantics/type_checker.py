@@ -439,8 +439,8 @@ class TypeChecker:
         right_type = node.right.accept(self)
         op = node.operator
         
-        if op in ["plus", "minus"]:
-            if left_type == right_type and left_type in ["int", "decimal"]:
+        if op in ["plus", "minus", "div", "mult", "mod"]:
+            if left_type in ["int", "decimal"] and right_type in ["int", "decimal"]:
                 return left_type
             else:
                 self.error_handler.report_error(
@@ -450,17 +450,12 @@ class TypeChecker:
                     details={"left_type": left_type, "right_type": right_type},
                 )
                 return None
-        elif op in ["mult", "div"]:
-            if left_type == right_type and left_type in ["int", "decimal"]:
-                return left_type
-            else:
-                self.error_handler.report_error(
-                    message=f"Operator '{op}' not supported for types '{left_type}' and '{right_type}'",
-                    error_type=TypeCheckError,
-                    node=node,
-                    details={"left_type": left_type, "right_type": right_type},
-                )
-                return None
+        elif op in ["eq", "neq"]:
+            pass
+        elif op in ["or", "and"]:
+            pass
+        elif op in ["lt", "gt", "gte", "lte"]:
+            pass
         else:
             self.error_handler.report_error(
                 message=f"Unsupported operator '{op}'",
@@ -495,3 +490,6 @@ class TypeChecker:
                 )
                 return None
         return None
+    
+    def visit_AccessOp(self, node: ast.AccessOp) -> Optional[str]:
+        pass
