@@ -5,7 +5,11 @@ class ValueTable(SymbolTable[Any]):
     def __init__(self, parent: Optional['ValueTable'] = None, persistent: bool = True):
         super().__init__(parent=parent, persistent=persistent)
     
+    def new_scope(self, persistent: bool = True) -> 'ValueTable':
+        return ValueTable(parent=self, persistent=persistent)
+
     def bind_local(self, name: str, value: Any):
+        #this is for x in "for all X in y"
         self.table[name] = value
 
     def bind (self, name: str, value: Any):
