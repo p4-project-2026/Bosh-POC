@@ -133,7 +133,7 @@ class TypeChecker:
         iterable_type = node.iterable.accept(self)
         if iterable_type is None:
             return None
-        if iterable_type != "list":
+        if not iterable_type.startswith("list<") and iterable_type.endswith(">"):
             self.error_handler.report_error(
                 message=f"Iterable in for all statement must be of type 'list', got '{iterable_type}'",
                 error_type=TypeCheckError,
@@ -142,7 +142,7 @@ class TypeChecker:
             )
             return None
         # Extract element type
-        element_type = "any"
+        element_type = iterable_type[5:-1]  # Extract type between "list<" and ">"
 
         # Scoping
         self.v_table.new_scope()
@@ -362,7 +362,7 @@ class TypeChecker:
                 node=node,
                 details={"name": var_name},
             )
-#        return var_type?
+        return var_type
     
     def visit_TaskIdentifier(self, node: ast.TaskIdentifier) -> Optional[str]:
         try:
@@ -375,7 +375,7 @@ class TypeChecker:
                 node=node,
                 details={"name": node.name},
             )
-#       return var_type?
+        return var_type
 
 # Expressions ----------------------------------------
 
