@@ -3,13 +3,13 @@ T = TypeVar('T')
 
 
 class SymbolTable(Generic[T]):
-    def __init__(self, parent: Optional['SymbolTable[T]'] = None, persistent: bool = False):
+    def __init__(self, parent: Optional['SymbolTable[T]'] = None, write_through: bool = True):
         self.parent = parent # For nested scopes
-        self.persistent = persistent
+        self.write_through = write_through
         self.table: Dict[str, T] = {}  # Variabelnavn -> type
         
-    def new_scope(self, persistent: bool = True) -> 'SymbolTable[T]':
-        return SymbolTable(parent=self, persistent=persistent)
+    def new_scope(self, write_through: bool = True) -> 'SymbolTable[T]':
+        return SymbolTable(parent=self, write_through=write_through)
     
     def exit_scope(self) -> 'SymbolTable[T]':
         if self.parent is None:
@@ -49,7 +49,7 @@ class SymbolTable(Generic[T]):
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
             return # If variable is already bound to the same type, do nothing
-        if self.persistent and self.parent is not None:
+        if self.write_through and self.parent is not None:
             # Check if variable is already defined in a parent scope with the same type
             try:
                 if self.parent.update(name, type_value):
@@ -64,7 +64,7 @@ class SymbolTable(Generic[T]):
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
             return True # If variable is already bound to the same type, do nothing
-        elif self.parent is not None and self.persistent:
+        elif self.parent is not None and self.write_through:
             return self.parent.update(name, type_value)
         else:
             return False
@@ -95,7 +95,7 @@ class SymbolTable(Generic[T]):
 #    def is_in_persistent_scope_and_same_type(self, name: str, type_value: T) -> bool:
 #        if name in self.table:
 #            return True
-#        elif self.persistent and self.parent is not None:
+#        elif self.write_through and self.parent is not None:
 #            return self.parent.is_in_persistent_scope(name)
 #        return False
     
