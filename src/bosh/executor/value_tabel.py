@@ -6,10 +6,6 @@ class ValueTable(SymbolTable[Any]):
         super().__init__(parent=parent, persistent=persistent)
     
     def bind_local(self, name: str, value: Any):
-        if name in self.table:
-            if self.table[name] != value:
-                raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
-            return # If variable is already bound to the same type, do nothing
         self.table[name] = value
 
     def bind (self, name: str, value: Any):
