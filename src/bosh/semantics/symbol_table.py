@@ -17,6 +17,22 @@ class SymbolTable(Generic[T]):
         return self.parent
 
 
+    def snapshot(self) -> Dict[str, T]:
+        scopes = []
+        scope = self
+        while scope is not None:
+            scopes.append(scope)
+            scope = scope.parent
+        
+        
+        snapshot_table: Dict[str, T] = {}
+
+        for scope in reversed(scopes):
+            snapshot_table.update(scope.table)
+        
+        
+        return snapshot_table
+
     # --- vtable ---
 
     # Bind a variable to a type in the LOCAL scope
