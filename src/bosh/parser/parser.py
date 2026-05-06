@@ -74,7 +74,7 @@ class BoshTransformer(Transformer):
         return node
 
     def return_(self, meta, args):
-        node = Return(value=args[0])
+        node = Return(expression=args[0])
         node.set_meta(meta, self._filename)
         return node
 
@@ -106,7 +106,7 @@ class BoshTransformer(Transformer):
         target = args[0]
         parameters = args[1] if len(args) > 2 else []
         body = args[-1]
-        node = TaskDecl(name=target.name, parameters=parameters, body=body)
+        node = TaskDecl(name=target, parameters=parameters, body=body)
         node.set_meta(meta, self._filename)
         return node
 

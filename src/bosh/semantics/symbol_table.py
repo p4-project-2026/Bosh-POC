@@ -31,7 +31,7 @@ class SymbolTable(Generic[T]):
         # Måske unødvendig exception, sørger for at vi ikke overskriver eksisterende variable i samme block
         if name in self.table:
             if self.table[name] != type_value:
-                raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
+                raise Exception(f"Variable '{name}' already bound to a different type in current scope.")
             return # If variable is already bound to the same type, do nothing
         if self.persistent and self.parent is not None:
             # Check if variable is already defined in a parent scope with the same type
