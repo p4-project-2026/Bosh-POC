@@ -42,7 +42,6 @@ class TypeChecker:
             except Exception as e:
                 print(f"Type error: {e}")
                 return 
-            #Assign should not return anything?
         
 
     def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
@@ -71,6 +70,7 @@ class TypeChecker:
         #staitment should not return anything?
         
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
+        #TODO complete
         param_types = ["any"] * len(node.parameters)
         signature = FunctionSignature(param_types=param_types, return_type="any")
         try:
@@ -177,7 +177,7 @@ class TypeChecker:
     
     def visit_ListAdd(self, node: ast.ListAdd) -> Optional[str]:
         target_type = node.target.accept(self)
-        node.item.accept(self) # Just check that the item is type correct, but we don't care about its type for type checking the ListAdd statement itself. Hjalmar note: wtf copilot comment
+        node.item.accept(self) 
 
         if target_type != "list" and target_type != "any":
             self.error_handler.report_error(
@@ -201,7 +201,7 @@ class TypeChecker:
         return None
     
     def visit_Return(self, node: ast.Return) -> Optional[str]:
-        return_type = node.value.accept(self)
+        return_type = node.expression.accept(self)
         return return_type
     
 # Domain Statements ----------------------------------------
