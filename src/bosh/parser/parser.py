@@ -3,8 +3,7 @@ from lark.exceptions import UnexpectedInput, UnexpectedToken, UnexpectedCharacte
 from bosh.abstract_syntax.ast_nodes import *
 from colorama import Fore, Style
 
-def parseBosh(processed_code, filename: str = None):
-
+def parseBosh(processed_code):
     with open("src/bosh/parser/bosh_lang.lark", "r") as f:
         grammar = f.read()
 
@@ -19,8 +18,10 @@ def parseBosh(processed_code, filename: str = None):
             message += f"Context:\n{Fore.CYAN}{context}{Style.RESET_ALL}"
         raise SyntaxError(message.strip()) from e
 
-    ast = BoshTransformer(filename=filename).transform(tree)
-    return ast
+    return tree
+
+def createAST(tree, filename: str = None) -> Program:
+    return BoshTransformer(filename=filename).transform(tree)
 
 @v_args(meta=True)
 class BoshTransformer(Transformer):
@@ -315,6 +316,11 @@ class BoshTransformer(Transformer):
 
     def null(self, meta, args):
         node = NullLiteral()
+        node.set_meta(meta, self._filename)
+        return node
+
+    def list(self, meta, args):
+        node = ListLiteral(elements=args)
         node.set_meta(meta, self._filename)
         return node
 
