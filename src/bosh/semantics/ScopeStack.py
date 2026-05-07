@@ -16,7 +16,7 @@ class ScopeStack(Generic[T]):
             raise Exception("Cannot exit global scope.")
         
     def snapshot(self) -> Dict[str, T]:
-        return self.table.snapshot()
+        return ScopeStack(self.table.snapshot_table())
     
     
     def bind_local(self, name: str, value: T):
