@@ -3,11 +3,11 @@ from .symbol_table import SymbolTable
 T = TypeVar('T')
 
 class ScopeStack(Generic[T]):
-    def __init__(self,  table: Optional[SymbolTable[T]] = None, persistent: bool = True):
-        self.table = table if table is not None else SymbolTable[T](persistent=persistent)
+    def __init__(self,  table: Optional[SymbolTable[T]] = None, write_through: bool = True):
+        self.table = table if table is not None else SymbolTable[T](write_through=write_through)
 
-    def new_scope(self, persistent: bool = True):
-        self.table = self.table.new_scope(persistent=persistent)
+    def new_scope(self, write_through: bool = True):
+        self.table = self.table.new_scope(write_through=write_through)
 
     def exit_scope(self):
         try:
@@ -17,6 +17,7 @@ class ScopeStack(Generic[T]):
         
     def snapshot(self) -> Dict[str, T]:
         return self.table.snapshot()
+    
     
     def bind_local(self, name: str, value: T):
         try:
