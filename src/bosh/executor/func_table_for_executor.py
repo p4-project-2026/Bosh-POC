@@ -19,6 +19,6 @@ class functionDef:
     
 
 
-def FileTableForExecutor(SymbolTable[functionDef]):
+def funcTableForExecutor(SymbolTable[functionDef]):
     def __init__(self, parent: Optional['FileTableForExecutor'] = None, write_through: bool = True):
         super().__init__(parent=parent, write_through=write_through)
