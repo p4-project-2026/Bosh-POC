@@ -22,7 +22,7 @@ class ScopeStack(Generic[T]):
         try:    
             self.table.bind(name, value)
         except Exception as e:
-            raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
+            raise Exception(e)
 
     def lookup(self, name: str) -> Optional[T]:
         try:

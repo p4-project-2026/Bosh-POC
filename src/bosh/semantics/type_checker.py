@@ -48,7 +48,7 @@ class TypeChecker:
         # Checks that the assigned value matches the declared type, and registers the variable with that type
         var_name = node.target.name
         var_type = node.var_type
-        value_type = node.value.accept(self) if node.value else None
+        value_type = node.value.accept(self)
         if value_type and value_type != var_type:
             self.error_handler.report_error(
                 message=f"Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'",
@@ -322,7 +322,7 @@ class TypeChecker:
 # Literals and Identifiers ----------------------------------------
 
     def visit_NumberLiteral(self, node: ast.NumberLiteral) -> Optional[str]:
-        return "int"
+        return "number"
     
     def visit_DecimalLiteral(self, node: ast.DecimalLiteral) -> Optional[str]:
         return "decimal"

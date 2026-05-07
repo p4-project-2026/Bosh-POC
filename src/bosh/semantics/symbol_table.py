@@ -46,7 +46,7 @@ class SymbolTable(Generic[T]):
     def update(self, name: str, type_value: T) -> Optional[bool]:
         if name in self.table:
             if self.table[name] != type_value:
-                raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
+                raise Exception(f"Variable '{name}' already bound to a different type in accessible scope.")
             return True # If variable is already bound to the same type, do nothing
         elif self.parent is not None and self.persistent:
             return self.parent.update(name, type_value)
