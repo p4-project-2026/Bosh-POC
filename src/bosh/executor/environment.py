@@ -1,6 +1,6 @@
 from typing import Optional
 
-from bosh.executor.value_tabel import ValueTable
+from bosh.executor.value_table import ValueTable
 from bosh.semantics.ScopeStack import ScopeStack
 from bosh.executor.func_table_for_executor import FileTableForExecutor, FunctionDef
 from bosh.abstract_syntax.ast_base import Block
