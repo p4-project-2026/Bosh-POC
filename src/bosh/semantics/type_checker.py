@@ -99,8 +99,7 @@ class TypeChecker:
 # General Statements ----------------------------------------
 
     def visit_Print(self, node: ast.Print) -> Optional[str]:
-        value = node.expression.accept(self)
-        print(value)
+        # value = node.expression.accept(self)
         return None
 
     def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:

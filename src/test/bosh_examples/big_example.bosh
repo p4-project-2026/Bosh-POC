@@ -6,14 +6,14 @@ Date Prefix is now.
 make new folder Backup Dir in here.
 go to Backup Dir otherwise quit.
 
-say "Copy files from @Dir to @Backup Dir". 
+say "Copy files from {Dir} to {Backup Dir}". 
 
 # Copy files
 copy from Dir to Backup Dir.
 
 for each Current File in here:
     if Current File equals file
-        rename Current File to "@Date Prefix_@Current File"
+        rename Current File to "{Date Prefix}_{Current File}"
 
 say "Cleaning files older than 7 days..."
 

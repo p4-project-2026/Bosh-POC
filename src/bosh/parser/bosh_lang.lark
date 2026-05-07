@@ -63,7 +63,8 @@ block:   stmt (_SEP stmt)* _SEP?
             | mult_expr ( "%" | "mod" ) unary_expr -> mod
 
 ?unary_expr : access_expr
-            | ("not" | "!" | "negative" | "neg" ) unary_expr -> not_
+            | ("not" | "!") unary_expr -> not_
+            | ("negative" | "neg" | "-") unary_expr -> neg
             | "length of" access_expr -> length
             | "first element of" access_expr -> first
             | "last element of"  access_expr -> last
