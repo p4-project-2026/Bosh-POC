@@ -1,5 +1,9 @@
+from bosh.executor.value_tabel import ValueTable
+
+
 class Environment:
-    # __init__
+    def __init__(self):
+        self.values = [ValueTable()]
     # bind
     # lookup
     pass
