@@ -48,7 +48,7 @@ class TypeChecker:
         # Checks that the assigned value matches the declared type, and registers the variable with that type
         var_name = node.target.name
         var_type = node.var_type
-        value_type = node.value.accept(self) if node.value else None
+        value_type = node.value.accept(self)
         if value_type and value_type != var_type:
             self.error_handler.report_error(
                 message=f"Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'",
@@ -67,7 +67,6 @@ class TypeChecker:
                 node=node,
             )
             return
-        #staitment should not return anything?
         
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
         #TODO complete
@@ -104,9 +103,9 @@ class TypeChecker:
 
     def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:
         condition_type = node.condition.accept(self)
-        if condition_type != "bool":
+        if condition_type != "boolean":
             self.error_handler.report_error(
-                message=f"Condition in if statement must be of type 'bool', got '{condition_type}'",
+                message=f"Condition in if statement must be of type 'boolean', got '{condition_type}'",
                 error_type=TypeCheckError,
                 node=node,
                 details={"condition_type": condition_type},
@@ -161,9 +160,9 @@ class TypeChecker:
 
     def visit_RepeatUntil(self, node: ast.RepeatUntil) -> Optional[str]:
         condition_type = node.condition.accept(self)
-        if condition_type != "bool":
+        if condition_type != "boolean":
             self.error_handler.report_error(
-                message=f"Condition in repeat until statement must be of type 'bool', got '{condition_type}'",
+                message=f"Condition in repeat until statement must be of type 'boolean', got '{condition_type}'",
                 error_type=TypeCheckError,
                 node=node,
                 details={"condition_type": condition_type},
@@ -321,7 +320,7 @@ class TypeChecker:
 # Literals and Identifiers ----------------------------------------
 
     def visit_NumberLiteral(self, node: ast.NumberLiteral) -> Optional[str]:
-        return "int"
+        return "number"
     
     def visit_DecimalLiteral(self, node: ast.DecimalLiteral) -> Optional[str]:
         return "decimal"
@@ -333,7 +332,7 @@ class TypeChecker:
         return "string"
     
     def visit_BooleanLiteral(self, node: ast.BooleanLiteral) -> Optional[str]:
-        return "bool"
+        return "boolean"
     
     def visit_NullLiteral(self, node: ast.NullLiteral) -> Optional[str]:
         return "null"
@@ -452,6 +451,7 @@ class TypeChecker:
                     details={"left_type": left_type, "right_type": right_type},
                 )
                 return None
+        #TODO Finish
         elif op in ["eq", "neq"]:
             pass
         elif op in ["or", "and"]:
@@ -482,10 +482,9 @@ class TypeChecker:
                 )
                 return None
         elif op == "not":
-            # bool eller boolean? I am confusion
-            if operand_type != "bool":
+            if operand_type != "boolean":
                 self.error_handler.report_error(
-                    message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'bool'.",
+                    message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'boolean'.",
                     error_type=TypeCheckError,
                     node=node,
                     details={"operand_type": operand_type},
