@@ -11,7 +11,7 @@ class SymbolTable(Generic[T]):
     def new_scope(self, write_through: bool = True) -> 'SymbolTable[T]':
         return SymbolTable(parent=self, write_through=write_through)
     
-    def exit_scope(self) -> 'SymbolTable[T]':
+    def exit_scope(self):
         if self.parent is None:
             raise Exception("Cannot exit global scope.")
         return self.parent
@@ -32,6 +32,11 @@ class SymbolTable(Generic[T]):
         
         
         return snapshot_table
+    
+    def snapshot_table(self) -> 'SymbolTable[T]':
+        snapshot = SymbolTable[T]()
+        snapshot.table = self.snapshot()
+        return snapshot
 
     # --- vtable ---
 
@@ -59,7 +64,7 @@ class SymbolTable(Generic[T]):
         self.table[name] = type_value
 
  
-    def update(self, name: str, type_value: T) -> Optional[bool]:
+    def update(self, name: str, type_value: T) -> bool:
         if name in self.table:
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
