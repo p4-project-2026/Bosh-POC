@@ -32,7 +32,7 @@ class TypeChecker:
 
 # Definitions ----------------------------------------
 
-    def visit_Assign(self, node: ast.Assign) -> Optional[str]: 
+    def visit_Assign(self, node: ast.Assign) -> Optional[str]:
         var_name = node.target
         value_type = node.value.accept(self)
 
@@ -328,6 +328,9 @@ class TypeChecker:
         return "decimal"
     
     def visit_StringLiteral(self, node: ast.StringLiteral) -> Optional[str]:
+        return "string"
+
+    def visit_InterpolatedString(self, node: ast.InterpolatedString) -> Optional[str]:
         return "string"
     
     def visit_BooleanLiteral(self, node: ast.BooleanLiteral) -> Optional[str]:
