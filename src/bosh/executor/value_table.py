@@ -27,13 +27,13 @@ class ValueTable(SymbolTable[Cell]):
     def bind_local(self, name: str, value: Any):
         #this is for x in "for all X in y"
         if name in self.table:
-            self.table[name] = Cell(value)
+            self.table[name].value = value 
             return # If variable is already bound to the same type, do nothing
         self.table[name] = Cell(value)
 
     def bind (self, name: str, value: Any):
         if name in self.table:
-            self.table[name] = Cell(value)
+            self.table[name].value = value
             return # If variable is already bound to the same type, do nothing
         if self.write_through and self.parent is not None:
             # Check if variable is already defined in a parent scope with the same type
@@ -44,7 +44,7 @@ class ValueTable(SymbolTable[Cell]):
             
     def update(self, name: str, value: Any) -> bool:
         if name in self.table:
-            self.table[name] = Cell(value)
+            self.table[name].value = value
             return True # If variable is already bound to the same type, do nothing
         elif self.parent is not None and self.write_through:
             return self.parent.update(name, value)
