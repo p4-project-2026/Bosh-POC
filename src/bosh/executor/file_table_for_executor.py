@@ -6,9 +6,19 @@ from bosh.executor.value_tabel import ValueTable
 from typing import Dict, Optional, Any, TypeVar
 @dataclass
 class functionDef:
-    parameters: Dict[str, ]
+    parameters: list[str]
+    return_type: Optional[str]
     the_function_parent_scope: ValueTable
     body: Block
 
+    def __init__(self, parameters: Dict[str, ], return_type: Optional[str], the_function_parent_scope: ValueTable, body: Block):
+        self.parameters = list(parameters.keys())
+        self.return_type = return_type
+        self.the_function_parent_scope = the_function_parent_scope
+        self.body = body
+    
+
 
 def FileTableForExecutor(SymbolTable[functionDef]):
+    def __init__(self, parent: Optional['FileTableForExecutor'] = None, write_through: bool = True):
+        super().__init__(parent=parent, write_through=write_through)
