@@ -302,10 +302,28 @@ class BoshTransformer(Transformer):
         return node
 
     def text(self, meta, args):
-        content = str(args[0])[1:-1]
-        node = StringLiteral(value=content)
+        parts = []
+        for part in args:
+            # str_chars returns raw Python str, interp returns AST node
+            if isinstance(part, str):
+                parts.append(StringLiteral(value=part))
+            else:
+                parts.append(part)
+
+        # If there is only a single string part, return a plain StringLiteral
+        if len(parts) == 1 and isinstance(parts[0], StringLiteral):
+            node = parts[0]
+        else:
+            node = InterpolatedString(parts=parts)
+
         node.set_meta(meta, self._filename)
         return node
+    
+    def str_chars(self, meta, args):
+        return str(args[0])
+
+    def interp(self, meta, args):
+        return args[0]
 
     def boolean(self, meta, args):
         value_str = str(args[0]).lower()
