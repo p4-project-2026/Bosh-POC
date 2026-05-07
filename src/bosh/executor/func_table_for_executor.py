@@ -5,7 +5,7 @@ from bosh.semantics.symbol_table import SymbolTable
 from bosh.executor.value_tabel import ValueTable
 from typing import Dict, Optional, Any, TypeVar
 @dataclass
-class functionDef:
+class FunctionDef:
     parameters: list[str]
     return_type: Optional[str]
     the_function_parent_scope: ValueTable
@@ -19,6 +19,6 @@ class functionDef:
     
 
 
-def FuncTableForExecutor(SymbolTable[functionDef]):
+def FuncTableForExecutor(SymbolTable[FunctionDef]):
     def __init__(self, parent: Optional['FuncTableForExecutor'] = None, write_through: bool = True):
         super().__init__(parent=parent, write_through=write_through)
