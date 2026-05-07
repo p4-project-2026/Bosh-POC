@@ -47,9 +47,9 @@ class Executor:
     def visit_IfElse(self, node: ast.IfElse):
         condition_value = node.condition.accept(self)
         if condition_value:
-            return node.if_block.accept(self)
-        elif node.else_block:
-            return node.else_block.accept(self)
+            return node.then_branch.accept(self)
+        elif node.else_branch:
+            return node.else_branch.accept(self)
         return None
     
     def visit_Fallback(self, node: ast.Fallback):
