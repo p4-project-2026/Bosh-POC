@@ -1,10 +1,11 @@
-from typing import Dict, Generic
+from typing import Dict, Generic, TypeVar
 
+T = TypeVar('T')
 
 class Table(Generic[T]):
-    def __init__(self, functionscope: bool = False):
+    def __init__(self, function_scope: bool = False):
         self.table: Dict[str, T] = {}
-        self.functionscope: bool = functionscope
+        self.function_scope: bool = function_scope
 
     def bind(self, name: str, value: T):
         if name in self.table:
