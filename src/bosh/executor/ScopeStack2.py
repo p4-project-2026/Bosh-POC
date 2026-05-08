@@ -29,8 +29,7 @@ class ScopeStack2:
 
         for scope in reversed(visible_scopes):
             snapshot.update(scope.get_snapshot())
-        
-        return VarTable(table=snapshot, function_scope=True)
+        return VarTable(table=snapshot)
 
     def lookup(self, name: str) -> int:
         for scope in reversed(self.stack):
