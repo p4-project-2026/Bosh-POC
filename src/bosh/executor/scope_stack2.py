@@ -1,4 +1,5 @@
 from bosh.executor.var_table import VarTable
+from bosh.executor.function_binding import FunctionBinding
 
 
 class ScopeStack2:
@@ -11,12 +12,17 @@ class ScopeStack2:
     def exit_scope(self):
         if len(self.stack) == 1:
             raise Exception("Cannot exit global scope.")
+        if self.stack[-2].function_scope:
+            self.stack.pop()  # pop function body scope
+            self.stack.pop()  # pop captured function boundary scope
+            return
         self.stack.pop()
 
 
-    def enter_function_scope(self, function_def):
-        function_scope = function_def.the_function_parent_scope.copy(function_scope=True)
+    def enter_function_scope(self, function_def: FunctionBinding):
+        function_scope = function_def.captured_scope.copy(function_scope=True)
         self.stack.append(function_scope)
+        self.new_scope()  # Create a new scope for the function body
 
     def snapshot(self) -> VarTable:
         visible_scopes: list[VarTable] = []
@@ -37,6 +43,14 @@ class ScopeStack2:
                 return scope.lookup(name)
             if scope.function_scope:  # If we reach a function scope or global scope, stop searching
                 break    
+        raise Exception(f"Variable '{name}' not found in scope.")
+    
+    def lookup_assign(self, name: str) -> int:
+        for scope in reversed(self.stack):
+            if scope.function_scope:  # If we reach a function scope or global scope, stop searching
+                break    
+            if scope.contains(name):
+                return scope.lookup(name)
         raise Exception(f"Variable '{name}' not found in scope.")
 
     def bind(self, name: str, value: int):
