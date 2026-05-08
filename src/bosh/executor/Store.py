@@ -12,9 +12,9 @@ class Store:
         self.memory: Dict[int, Cell] = {}
         self.next_location: int = 0
     
-    def allocate(self, value: Cell) -> int:
+    def allocate(self, value: Any) -> int:
         loc = self.next_location
-        self.memory[loc] = value
+        self.memory[loc] = Cell(value)
         self.next_location += 1
         return loc
     
@@ -26,4 +26,4 @@ class Store:
     def set(self, address: int, value: Cell):
         if address not in self.memory:
             raise Exception(f"Address {address} not found in store.")
-        self.memory[address] = value
+        self.memory[address].value = value
