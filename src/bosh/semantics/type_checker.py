@@ -46,7 +46,7 @@ class TypeChecker:
 
     def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
         # Checks that the assigned value matches the declared type, and registers the variable with that type
-        var_name = node.target.name
+        var_name = node.target
         var_type = node.var_type
         value_type = node.value.accept(self)
         if value_type and value_type != var_type:
@@ -132,12 +132,11 @@ class TypeChecker:
         iterable_type = node.iterable.accept(self)
         if iterable_type is None:
             return None
-        if not iterable_type.startswith("list<") and iterable_type.endswith(">"):
+        if not isinstance(iterable_type, str) or not iterable_type.startswith("list"):
             self.error_handler.report_error(
-                message=f"Iterable in for all statement must be of type 'list', got '{iterable_type}'",
+                message=f"Type error: Cannot iterate over type '{iterable_type}'. Expected a list.",
                 error_type=TypeCheckError,
-                node=node,
-                details={"iterable_type": iterable_type},
+                node=node
             )
             return None
         # Extract element type
@@ -168,7 +167,18 @@ class TypeChecker:
                 node=node,
                 details={"condition_type": condition_type},
             )
-        node.body.accept(self)
+        self.v_table.new_scope()
+        try:
+            node.body.accept(self)
+        except Exception as e:
+            self.error_handler.report_error(
+                message=str(e),
+                error_type=TypeCheckError,
+                node=node,
+            )
+        finally:
+            self.v_table.exit_scope()
+            
         return None
     
     def visit_Quit(self, node: ast.Quit) -> Optional[str]:
@@ -327,10 +337,10 @@ class TypeChecker:
         return "decimal"
     
     def visit_StringLiteral(self, node: ast.StringLiteral) -> Optional[str]:
-        return "string"
+        return "text"
 
     def visit_InterpolatedString(self, node: ast.InterpolatedString) -> Optional[str]:
-        return "string"
+        return "text"
     
     def visit_BooleanLiteral(self, node: ast.BooleanLiteral) -> Optional[str]:
         return "boolean"
