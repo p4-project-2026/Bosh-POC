@@ -1,16 +1,23 @@
 from bosh.executor.table import Table
-
+from typing import Dict, Optional
 
 class VarTable(Table[int]):
-    def __init__(self, function_scope: bool = False):
+    def __init__(
+            self,
+            function_scope: bool = False,
+            table: Optional[Dict[str, int]] = None
+        ):
         super().__init__(function_scope=function_scope)
-    
-    def __init__(self, table: dict[str, int]):
-        self.function_scope = False
-        self.table = table.copy()
+        if table is not None:
+            self.table = table.copy()
     
     def get_snapshot(self):
         return self.table.copy()
-
+    
+    def copy(self, function_scope: Optional[bool] = None):
+        return VarTable(
+            function_scope=self.function_scope if function_scope is None else function_scope,
+            table=self.table.copy()
+        )
     
  
