@@ -1,10 +1,10 @@
-
-
 from typing import Any, Dict
 
-
 class Cell:
-    def __init__(self, value: Any, mutable: bool = True):
+    def __init__(
+            self,
+            value: Any, 
+        ):
         self.value = value
 
 class Store:
