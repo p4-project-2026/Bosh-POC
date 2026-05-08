@@ -2,7 +2,14 @@ from dataclasses import dataclass
 
 from bosh.abstract_syntax.ast_base import Block
 from bosh.semantics.symbol_table import SymbolTable
-from bosh.executor.scope_stack import ScopeStack
+from bosh.semantics.ScopeStack import ScopeStack
+
+
+
+# This was an incorrect implementation of the function table.
+# It's only still here because I know we're leaving the repo.
+
+
 
 from typing import Dict, Optional, Any, TypeVar
 @dataclass
