@@ -3,7 +3,7 @@
 
 from typing import Optional
 from bosh.executor.scope_stack2 import ScopeStack2
-from bosh.executor.Store import Store
+from bosh.executor.store import Store
 from bosh.executor.table import Table
 from bosh.executor.function_binding import FunctionBinding
 class Environment:
@@ -20,7 +20,7 @@ class Environment:
         self.v_table.exit_scope()
     
     def enter_function_scope(self,name: str) -> FunctionBinding:
-        """Enter a new function scope based on the function definition."""
+        """Enter a new function scope based on the function definition associated with the given name. returns the FunctionBinding for the function being entered."""
         function_def = None
         try:
             function_def = self.f_table.lookup(name)
@@ -30,7 +30,7 @@ class Environment:
         return function_def
         
     def assign_variable(self, name: str, value: int):
-        """Assign a value to a variable. If the variable already exists in any visible scope, update it. Otherwise, create a new variable in the current scope."""
+        """Assign a value to a variable. If the variable already exists in any assingnable scope, update its value. Otherwise, create a new variable in the current scope."""
         try:
             loc = self.v_table.lookup_assign(name)  # Check if variable exists in any visible scope
             self.store.set(loc, value)  # Update the value in the store
