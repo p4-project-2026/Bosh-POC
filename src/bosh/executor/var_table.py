@@ -11,13 +11,13 @@ class VarTable(Table[int]):
         if table is not None:
             self.table = table.copy()
     
-    def get_snapshot(self):
+    def get_snapshot(self) -> Dict[str, int]:
         return self.table.copy()
     
-    def copy(self, function_scope: Optional[bool] = None):
+    def copy(self, function_scope: Optional[bool] = None) -> 'VarTable':
         return VarTable(
             function_scope=self.function_scope if function_scope is None else function_scope,
-            table=self.table.copy()
+            table=self.table
         )
     
  
