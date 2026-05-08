@@ -3,6 +3,16 @@ from dataclasses import dataclass
 from bosh.semantics.symbol_table import SymbolTable
 from typing import Optional, Any
 
+
+
+'''
+This was an incorrect implementation of the value table.
+!!var_table and  is the one that should be used for variable bindings!!.
+It's only still here because I know we're leaving the repo.
+'''
+
+
+
 @dataclass
 class Cell:
 

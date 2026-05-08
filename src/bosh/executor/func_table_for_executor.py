@@ -5,10 +5,10 @@ from bosh.semantics.symbol_table import SymbolTable
 from bosh.semantics.ScopeStack import ScopeStack
 
 
-
+'''
 # This was an incorrect implementation of the function table.
 # It's only still here because I know we're leaving the repo.
-
+'''
 
 
 from typing import Dict, Optional, Any, TypeVar
