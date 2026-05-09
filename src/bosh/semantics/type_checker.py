@@ -49,29 +49,24 @@ class TypeChecker:
         var_name = node.target
         var_type = node.var_type
         value_type = node.value.accept(self)
-        if value_type and value_type != var_type:
+        if var_type == "list" and isinstance(value_type, str) and value_type.startswith("list"):
+            var_type = value_type  # If variable is declared as list, take the element type from the assigned value
+        elif value_type != var_type:
             self.error_handler.report_error(
                 message=f"Cannot assign value of type '{value_type}' to variable '{var_name}' of type '{var_type}'",
                 error_type=TypeCheckError,
                 node=node,
                 details={"expected": var_type, "actual": value_type},
             )
-            return
-        try:
-            self.v_table.bind(var_name, var_type)
-            return
-        except Exception as e:
-            self.error_handler.report_error(
-                message=str(e),
-                error_type=TypeCheckError,
-                node=node,
-            )
-            return
+            return None
+        
+        self.v_table.bind(var_name, var_type)
+        return None
         
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
         #TODO complete
         param_types = ["any"] * len(node.parameters)
-        signature = FunctionSignature(param_types=param_types, return_type="any")
+        signature = FunctionSignature(parameters=param_types, return_type="any")
         try:
             self.f_table.bind(node.name, signature)
         except Exception as e:
@@ -186,27 +181,54 @@ class TypeChecker:
     
     def visit_ListAdd(self, node: ast.ListAdd) -> Optional[str]:
         target_type = node.target.accept(self)
-        node.item.accept(self) 
+        item_type = node.item.accept(self) 
 
-        if target_type != "list" and target_type != "any":
+        if not isinstance(target_type, str) or not target_type.startswith("list"):
             self.error_handler.report_error(
                 message=f"Cannot add to type '{target_type}'. Can only add to lists.",
                 error_type=TypeCheckError,
                 node=node
             )
+            return None
+
+        if "<" in target_type and ">" in target_type:
+            expected_type = target_type[5:-1]  # Extract type between "list<" and ">"
+
+            if item_type != expected_type and expected_type != "any":
+                self.error_handler.report_error(
+                    message=f"Cannot add item of type '{item_type}' to list of '{expected_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"item_type": item_type, "expected_type": expected_type},
+                )
+            return None
         
         return None
 
     def visit_ListRemove(self, node: ast.ListRemove) -> Optional[str]:
         target_type = node.target.accept(self)
-        node.item.accept(self)
+        item_type = node.item.accept(self)
 
-        if target_type != "list" and target_type != "any":
+        if not isinstance(target_type, str) or not target_type.startswith("list"):
             self.error_handler.report_error(
                 message=f"Cannot remove from type '{target_type}'. Can only remove from lists.",
                 error_type=TypeCheckError,
                 node=node
             )
+            return None
+    
+        if "<" in target_type and ">" in target_type:
+            expected_type = target_type[5:-1]  # Extract type between "list<" and ">"
+
+            if item_type != expected_type and expected_type != "any":
+                self.error_handler.report_error(
+                    message=f"Cannot remove item of type '{item_type}' from list of '{expected_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"item_type": item_type, "expected_type": expected_type},
+                )
+            return None
+        
         return None
     
     def visit_Return(self, node: ast.Return) -> Optional[str]:

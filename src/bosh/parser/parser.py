@@ -79,7 +79,7 @@ class BoshTransformer(Transformer):
         return node
 
     def add_to_list(self, meta, args):
-        node = ListAdd(target=args[1], element=args[0])
+        node = ListAdd(target=args[1], item=args[0])
         node.set_meta(meta, self._filename)
         return node
 
@@ -117,9 +117,9 @@ class BoshTransformer(Transformer):
         return node
 
     def make(self, meta, args):
-        entity_type = str(args[1])
-        name = args[2].name if hasattr(args[2], "name") else str(args[2])
-        node = Make(entity_type=entity_type, name=name, location=args[3])
+        entity_type = str(args[0])
+        name = args[1].name if hasattr(args[1], "name") else str(args[1])
+        node = Make(entity_type=entity_type, name=name, location=args[2])
         node.set_meta(meta, self._filename)
         return node
 
