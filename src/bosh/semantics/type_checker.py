@@ -11,8 +11,16 @@ class TypeChecker:
         self.f_table = FuncTable()
         self.error_handler = ErrorHandler()
 
-    def check(self, node: ast.ASTNode) -> Optional[str]:
-        return node.accept(self)
+    def check(self, program_ast: Program):
+        try:
+            program_ast.type_check(self.v_table, self.f_table)
+        except BoshTypeError as e:
+            self.error_handler.report_error(
+                message=e.message,
+                error_type=TypeCheckError,
+                node=e.node
+            )
+    
 
     def default_visit(self, node: ast.ASTNode) -> Optional[str]:
         self.error_handler.report_error(

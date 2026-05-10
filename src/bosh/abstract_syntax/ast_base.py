@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
+from .ast_base import ASTNode, Block
+import bosh.semantics.FuncTable as FuncTable
+from bosh.semantics.ScopeStack import ScopeStack
+from bosh.executor.environment import Environment
 
 @dataclass
 class Position():
@@ -22,7 +26,15 @@ class ASTNode():
                 filename=filename
             )
 
+    # NOT USED ANYMORE
     def accept(self, visitor) -> Any:
+        raise NotImplementedError()
+    
+    #NEW:
+    def type_check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        raise NotImplementedError()
+    
+    def execute(self, env: Environment) -> Any:
         raise NotImplementedError()
 
 
