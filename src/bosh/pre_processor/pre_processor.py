@@ -40,7 +40,7 @@ class PreProcessor:
     def insert_ifelse_symbol(self):
         data = self.data.splitlines()
         for i, line in enumerate(data):
-            if data[i].startswith("else"):
+            if line.strip().startswith("else") or line.strip().startswith("otherwise"):
                 data[i-1] += "~"
         
         self.data = "\n".join(data)

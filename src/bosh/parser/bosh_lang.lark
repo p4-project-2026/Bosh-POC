@@ -2,7 +2,7 @@
 
 program: block
 
-block:   stmt (_SEP stmt)* _SEP?
+block:  stmt (_SEP+ stmt)* _SEP*
 ?in_code_block: _NL* _BLOCKSTART _NL*  block _NL* _BLOCKEND
 
 
@@ -33,6 +33,13 @@ block:   stmt (_SEP stmt)* _SEP?
                 | "rename" expr "to" expr -> rename
                 | "delete" expr -> delete
                 | "copy from" expr "to" expr -> copy_from_to
+                | "go up" -> go_up
+                | "move" expr "to" expr -> move
+                | "read" expr -> read_file
+                | "write" expr "to" expr -> write_file
+                | ("execute" | "run") expr -> execute
+                | "pause" -> pause
+                | "wait" expr -> wait
 
 
 ?expr   :or_expr    
@@ -68,6 +75,10 @@ block:   stmt (_SEP stmt)* _SEP?
             | "length of" access_expr -> length
             | "first element of" access_expr -> first
             | "last element of"  access_expr -> last
+            | "floor of" access_expr -> floor
+            | "ceiling of" access_expr -> ceiling
+            | "exponent of" access_expr -> exponent
+            | "round of" access_expr -> round
 
 ?access_expr    : term
                 | access_expr "at index" access_expr -> list_look
@@ -86,6 +97,7 @@ block:   stmt (_SEP stmt)* _SEP?
         | text
         | BOOLEAN -> boolean
         | "(" term ("," term)* ")" -> list
+        | "input" ("(" expr ")")? -> input
         | "null" -> null
         | "now"  -> now
         | "here" -> here
@@ -116,6 +128,8 @@ text: "\"" (str_chars | interp)* "\""
 str_chars: /([^"{\\]|\\.)+/
 interp: "{" expr "}"
 
+FLOAT: /[0-9]+\.[0-9]+/
+
 _BLOCKSTART: "{"
 _BLOCKEND: "}" 
 _SEP: "." _WS* _NL* | _NL+
@@ -125,6 +139,5 @@ IDENT: /[A-Z][a-zA-Z0-9]*/(" "*/[A-Z][a-zA-Z0-9]*/)*
 %import common.WS_INLINE -> _WS
 %import common.NEWLINE -> _NL
 %import common.INT -> NUMBER
-%import common.FLOAT -> FLOAT
 %ignore COMMENT
 %ignore _WS

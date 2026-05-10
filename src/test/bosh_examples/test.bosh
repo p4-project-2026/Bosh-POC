@@ -1,0 +1,63 @@
+# Setup some basic variables
+Time is 3 days
+User Name is "Admin User".
+Max Retries is 5.
+Current Status is "Initializing".
+
+# Define a task (function) to process data
+task Process Entry uses (Value, Multiplier) :
+    Calculated is Value times Multiplier
+
+    if Calculated greater than 10:
+        return "High"
+
+    otherwise:
+        return "Low"
+
+# Domain and File System operations
+Work Directory is "Project Alpha".
+make folder Work Directory.
+go to Work Directory.
+
+say "Quit if this doesn't work" else quit
+
+# List and Loop testing
+Data Points is (10, 25, 55, 80).
+Log Files is a list.
+
+for each Point in Data Points: 
+    # Test function calling and logic
+    Rating is Process Entry result using (Point, 2).
+    say "Processing {Point}: Rating is {Rating}".
+
+    # Create files based on data
+    File Name is "log_{Point}.txt".
+    make file File Name.
+    write "Status: {Rating}" to File Name.
+    add File Name to Log Files
+
+
+# Testing Unary and Access expressions
+say "Total logs created: {length of Log Files}".
+First Log is first element of Log Files.
+say "First file name starts with 'log': {First Log starts with "log"}".
+
+# Testing math and timing
+Value To Round is 10.75
+say "The floor of {Value To Round} is {floor of Value To Round}".
+
+say "Waiting for system sync...".
+wait 3 seconds.
+
+# Cleanup
+for each Item in Log Files
+    if Item ends with "55.txt"
+        rename Item to "special_log.txt"
+    else
+        delete Item
+    
+
+
+go up.
+say "Script execution complete".
+stop

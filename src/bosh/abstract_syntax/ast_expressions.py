@@ -69,7 +69,7 @@ class TaskIdentifier(ASTNode):
 @dataclass
 class TaskCall(ASTNode):
     name: str
-    arguments: List[ASTNode]
+    arguments: Optional[List[ASTNode]] = None
     def accept(self, visitor) -> Any:
         return visitor.visit_TaskCall(self)
 
