@@ -15,9 +15,8 @@ class FunctionSignature:
         self.return_type = return_type
 
 class FuncTable(SymbolTable[FunctionSignature]):
-    # need to change persistent to write_through wehen combind.
-    def __init__(self, parent: Optional['FuncTable'] = None, persistent: bool = True):
-        super().__init__(parent=parent, persistent=persistent)
+    def __init__(self, parent: Optional['FuncTable'] = None, write_through: bool = True):
+        super().__init__(parent=parent, write_through=write_through)
 
     def new_scope(self):
         raise Exception("Cannot create new scope for function definitions. Function definitions are global.")

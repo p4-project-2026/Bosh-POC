@@ -3,19 +3,40 @@ T = TypeVar('T')
 
 
 class SymbolTable(Generic[T]):
-    def __init__(self, parent: Optional['SymbolTable[T]'] = None, persistent: bool = False):
+    def __init__(self, parent: Optional['SymbolTable[T]'] = None, write_through: bool = True):
         self.parent = parent # For nested scopes
-        self.persistent = persistent
+        self.write_through = write_through
         self.table: Dict[str, T] = {}  # Variabelnavn -> type
         
-    def new_scope(self, persistent: bool = True) -> 'SymbolTable[T]':
-        return SymbolTable(parent=self, persistent=persistent)
+    def new_scope(self, write_through: bool = True) -> 'SymbolTable[T]':
+        return SymbolTable(parent=self, write_through=write_through)
     
-    def exit_scope(self) -> 'SymbolTable[T]':
+    def exit_scope(self):
         if self.parent is None:
             raise Exception("Cannot exit global scope.")
         return self.parent
 
+
+    def snapshot(self) -> Dict[str, T]:
+        scopes = []
+        scope = self
+        while scope is not None:
+            scopes.append(scope)
+            scope = scope.parent
+        
+        
+        snapshot_table: Dict[str, T] = {}
+
+        for scope in reversed(scopes):
+            snapshot_table.update(scope.table)
+        
+        
+        return snapshot_table
+    
+    def snapshot_table(self) -> 'SymbolTable[T]':
+        snapshot = SymbolTable[T]()
+        snapshot.table = self.snapshot()
+        return snapshot
 
     # --- vtable ---
 
@@ -33,7 +54,7 @@ class SymbolTable(Generic[T]):
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in current scope.")
             return # If variable is already bound to the same type, do nothing
-        if self.persistent and self.parent is not None:
+        if self.write_through and self.parent is not None:
             # Check if variable is already defined in a parent scope with the same type
             try:
                 if self.parent.update(name, type_value):
@@ -43,12 +64,12 @@ class SymbolTable(Generic[T]):
         self.table[name] = type_value
 
  
-    def update(self, name: str, type_value: T) -> Optional[bool]:
+    def update(self, name: str, type_value: T) -> bool:
         if name in self.table:
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in accessible scope.")
             return True # If variable is already bound to the same type, do nothing
-        elif self.parent is not None and self.persistent:
+        elif self.parent is not None and self.write_through:
             return self.parent.update(name, type_value)
         else:
             return False
@@ -79,7 +100,7 @@ class SymbolTable(Generic[T]):
 #    def is_in_persistent_scope_and_same_type(self, name: str, type_value: T) -> bool:
 #        if name in self.table:
 #            return True
-#        elif self.persistent and self.parent is not None:
+#        elif self.write_through and self.parent is not None:
 #            return self.parent.is_in_persistent_scope(name)
 #        return False
     
