@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
 from bosh.semantics.type_checker import BoshTypeError, ScopeStack, FuncTable
-
+from bosh.executor.environment import Environment
 
 @dataclass
 class Position():
@@ -38,7 +38,7 @@ class Program(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return self.block.check(v_table, f_table)
     
-    def execute(self, env: 'Environment') -> Any:
+    def execute(self, env: 'Environment') -> None:
         return self.block.execute(env)
 
 
@@ -51,7 +51,7 @@ class Block(ASTNode):
             stmt.check(v_table, f_table)
         return None
     
-    def execute(self, env: 'Environment') -> Any:
+    def execute(self, env: 'Environment') -> None:
         for stmt in self.statements:
             stmt.execute(env)
         return None
