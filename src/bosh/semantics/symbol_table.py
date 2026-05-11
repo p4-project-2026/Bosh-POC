@@ -1,4 +1,5 @@
 from typing import Optional, Dict, List, TypeVar, Generic
+from unittest import case
 T = TypeVar('T')
 
 
@@ -43,6 +44,15 @@ class SymbolTable(Generic[T]):
     # Bind a variable to a type in the LOCAL scope
     def bind_local(self, name: str, type_value: T):
         if name in self.table:
+            match type_value:
+                case "number":
+                    if self.table[name] is "decimal":
+                        return # Allow number to be treated as decimal
+                case "decimal":
+                    if self.table[name] is "number":
+                        return # Allow decimal to be treated as number
+                case _:
+                    pass
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in local scope.")
             return # If variable is already bound to the same type, do nothing
@@ -51,6 +61,15 @@ class SymbolTable(Generic[T]):
     def bind(self, name: str, type_value: T):
         # Måske unødvendig exception, sørger for at vi ikke overskriver eksisterende variable i samme block
         if name in self.table:
+            match type_value:
+                case "number":
+                    if self.table[name] is "decimal":
+                        return # Allow number to be treated as decimal
+                case "decimal":
+                    if self.table[name] is "number":
+                        return # Allow decimal to be treated as number
+                case _:
+                    pass
             if self.table[name] != type_value:
                 raise Exception(f"Variable '{name}' already bound to a different type in current scope.")
             return # If variable is already bound to the same type, do nothing
@@ -66,7 +85,17 @@ class SymbolTable(Generic[T]):
  
     def update(self, name: str, type_value: T) -> bool:
         if name in self.table:
+            match type_value:
+                case "number":
+                    if self.table[name] is "decimal":
+                        return True
+                case "decimal":
+                    if self.table[name] is "number":
+                        return True
+                case _:
+                    pass
             if self.table[name] != type_value:
+                
                 raise Exception(f"Variable '{name}' already bound to a different type in accessible scope.")
             return True # If variable is already bound to the same type, do nothing
         elif self.parent is not None and self.write_through:
