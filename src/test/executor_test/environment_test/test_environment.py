@@ -1,5 +1,6 @@
 from bosh.executor.environment import Environment
 from bosh.executor.function_binding import FunctionBinding
+from bosh.executor.var_table import VarTable
 
 def test_environment_variable_binding_and_lookup():
     env = Environment()
@@ -43,3 +44,8 @@ def test_environment_assign_variable_creates_new_variable():
     env.assign_variable("x", 5)
     assert env.lookup_variable("x") == 5
 
+def test_environment_snapshot():
+    env = Environment()
+    env.assign_variable("x", 42)
+    snapshot = env.snapshot()
+    assert snapshot.lookup("x") == 0
