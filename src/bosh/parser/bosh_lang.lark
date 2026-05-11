@@ -23,6 +23,7 @@ block:  stmt (_SEP+ stmt)* _SEP*
                 | IDENT "result" ("using" "(" expr ("," expr)* ")")? -> call_func
 
 
+
 ?def_stmt       : IDENT "is" expr -> assign
                 | IDENT "is" "a" TYPE expr? -> assign_type
                 | "new"? "task" IDENT ("uses" "(" (IDENT ("," IDENT)*)? ")")? ":"? in_code_block -> assign_func
@@ -35,8 +36,8 @@ block:  stmt (_SEP+ stmt)* _SEP*
                 | "copy from" expr "to" expr -> copy_from_to
                 | "go up" -> go_up
                 | "move" expr "to" expr -> move
-                | "read" expr -> read_file
-                | "write" expr "to" expr -> write_file
+                | "read" expr -> read
+                | "write" expr "to" expr -> write
                 | ("execute" | "run") expr -> execute
                 | "pause" -> pause
                 | "wait" expr -> wait
@@ -81,10 +82,10 @@ block:  stmt (_SEP+ stmt)* _SEP*
             | "round of" access_expr -> round
 
 ?access_expr    : term
-                | access_expr "at index" access_expr -> list_look
+                | access_expr "at" "index"? access_expr -> list_look
                 | "regex" access_expr -> regex
                 | access_expr "age" -> age
-                | access_expr "name" ->file_name
+                | access_expr "name" -> file_name
                 | access_expr "starts with" access_expr -> starts_with
                 | access_expr "ends with" access_expr -> ends_with
                 | access_expr unit -> unit

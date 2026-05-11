@@ -26,7 +26,7 @@ def controller(bosh_file_path):
 
 
     vprint("Analyzing...")
-    TypeChecker().new_check(ast)
+    TypeChecker().check(ast)
     #print("Analyzed.")
 
     vprint("Executing...")

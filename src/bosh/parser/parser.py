@@ -1,6 +1,6 @@
 from lark import Lark, Transformer, v_args
 from lark.exceptions import UnexpectedInput, UnexpectedToken, UnexpectedCharacters
-from bosh.abstract_syntax.ast_nodes import *
+from bosh.abstract_syntax import *
 from colorama import Fore, Style
 
 def parseBosh(processed_code):

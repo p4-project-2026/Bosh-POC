@@ -1,6 +1,4 @@
-from dataclasses import dataclass
-from typing import List, Any, Optional
-from .ast_base import ASTNode
+from . import *
 
 # Expression and literal nodes
 

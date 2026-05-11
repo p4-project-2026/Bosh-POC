@@ -1,8 +1,8 @@
 from typing import Any, Optional
-import bosh.abstract_syntax.ast_nodes as ast
+from bosh.abstract_syntax import *
 from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
-from ..error_handler import ErrorHandler, TypeCheckError
+from ..error_handler import ErrorHandler, TypeCheckError, BoshTypeError
 from .FuncTable import FuncTable, FunctionSignature
 
 class TypeChecker:
@@ -13,7 +13,7 @@ class TypeChecker:
 
     def check(self, program_ast: Program):
         try:
-            program_ast.type_check(self.v_table, self.f_table)
+            program_ast.check(self.v_table, self.f_table)
         except BoshTypeError as e:
             self.error_handler.report_error(
                 message=e.message,
@@ -22,7 +22,7 @@ class TypeChecker:
             )
     
 
-    def default_visit(self, node: ast.ASTNode) -> Optional[str]:
+    def default_visit(self, node: ASTNode) -> Optional[str]:
         self.error_handler.report_error(
             message=f"Type checking not implemented for node type: {type(node).__name__}",
             error_type=TypeCheckError,
@@ -30,17 +30,17 @@ class TypeChecker:
         )
         return None
 
-    def visit_Program(self, node: ast.Program) -> Optional[str]:
+    def visit_Program(self, node: Program) -> Optional[str]:
         return node.block.accept(self)
 
-    def visit_Block(self, node: ast.Block) -> Optional[str]:
+    def visit_Block(self, node: Block) -> Optional[str]:
         for stmt in node.statements:
             stmt.accept(self)
         return None
 
 # Definitions ----------------------------------------
 
-    def visit_Assign(self, node: ast.Assign) -> Optional[str]:
+    def visit_Assign(self, node: Assign) -> Optional[str]:
         var_name = node.target.name
         value_type = node.value.accept(self)
 
@@ -52,7 +52,7 @@ class TypeChecker:
                 return 
         
 
-    def visit_AssignType(self, node: ast.AssignType) -> Optional[str]:
+    def visit_AssignType(self, node: AssignType) -> Optional[str]:
         # Checks that the assigned value matches the declared type, and registers the variable with that type
         var_name = node.target.name
         var_type = node.var_type
@@ -76,7 +76,7 @@ class TypeChecker:
             )
             return
         
-    def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
+    def visit_TaskDecl(self, node: TaskDecl) -> Optional[str]:
         #TODO complete
         param_types = ["any"] * len(node.parameters)
         signature = FunctionSignature(param_types=param_types, return_type="any")
@@ -105,11 +105,11 @@ class TypeChecker:
 
 # General Statements ----------------------------------------
 
-    def visit_Print(self, node: ast.Print) -> Optional[str]:
+    def visit_Print(self, node: Print) -> Optional[str]:
         # value = node.expression.accept(self)
         return None
 
-    def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:
+    def visit_IfElse(self, node: IfElse) -> Optional[str]:
         condition_type = node.condition.accept(self)
         if condition_type != "boolean":
             self.error_handler.report_error(
@@ -130,12 +130,12 @@ class TypeChecker:
             self.v_table.exit_scope() # Exit else branch scope
         return None
 
-    def visit_Fallback(self, node: ast.Fallback) -> Optional[str]:
+    def visit_Fallback(self, node: Fallback) -> Optional[str]:
         node.primary_stmt.accept(self)
         node.fallback_stmt.accept(self)
         return None
     
-    def visit_ForAll(self, node: ast.ForAll) -> Optional[str]:
+    def visit_ForAll(self, node: ForAll) -> Optional[str]:
         iterable_type = node.iterable.accept(self)
         if iterable_type is None:
             return None
@@ -166,7 +166,7 @@ class TypeChecker:
 
         return None
 
-    def visit_RepeatUntil(self, node: ast.RepeatUntil) -> Optional[str]:
+    def visit_RepeatUntil(self, node: RepeatUntil) -> Optional[str]:
         condition_type = node.condition.accept(self)
         if condition_type != "boolean":
             self.error_handler.report_error(
@@ -178,10 +178,10 @@ class TypeChecker:
         node.body.accept(self)
         return None
     
-    def visit_Quit(self, node: ast.Quit) -> Optional[str]:
+    def visit_Quit(self, node: Quit) -> Optional[str]:
         return None
     
-    def visit_ListAdd(self, node: ast.ListAdd) -> Optional[str]:
+    def visit_ListAdd(self, node: ListAdd) -> Optional[str]:
         target_type = node.target.accept(self)
         node.item.accept(self) 
 
@@ -194,7 +194,7 @@ class TypeChecker:
         
         return None
 
-    def visit_ListRemove(self, node: ast.ListRemove) -> Optional[str]:
+    def visit_ListRemove(self, node: ListRemove) -> Optional[str]:
         target_type = node.target.accept(self)
         node.item.accept(self)
 
@@ -206,13 +206,13 @@ class TypeChecker:
             )
         return None
     
-    def visit_Return(self, node: ast.Return) -> Optional[str]:
+    def visit_Return(self, node: Return) -> Optional[str]:
         return_type = node.expression.accept(self)
         return return_type
     
 # Domain Statements ----------------------------------------
         
-    def visit_GoTo(self, node: ast.Goto) -> Optional[str]:
+    def visit_GoTo(self, node: Goto) -> Optional[str]:
         path_type = node.path.accept(self)
 
         if path_type not in ["text", "folder"]:
@@ -223,7 +223,7 @@ class TypeChecker:
             )
         return None
     
-    def visit_Make(self, node: ast.Make) -> Optional[str]:
+    def visit_Make(self, node: Make) -> Optional[str]:
         if node.entity_type not in ["file", "folder"]:
              self.error_handler.report_error(
                 message=f"Entity type in make statement must be of type 'file' or 'folder', got '{node.entity_type}'",
@@ -241,7 +241,7 @@ class TypeChecker:
              
         return None
     
-    def visit_Delete(self, node: ast.Delete) -> Optional[str]:
+    def visit_Delete(self, node: Delete) -> Optional[str]:
         target_type = node.target.accept(self)
         if target_type not in ["file", "folder", "text"]:
             self.error_handler.report_error(
@@ -251,7 +251,7 @@ class TypeChecker:
             )
         return None
     
-    def visit_Rename(self, node: ast.Rename) -> Optional[str]:
+    def visit_Rename(self, node: Rename) -> Optional[str]:
         target_type = node.target.accept(self)
 
         if target_type not in ["file", "folder", "text"]:
@@ -263,7 +263,7 @@ class TypeChecker:
         self.v_table.bind(node.new_name, target_type)
         return None
 
-    def visit_Copy(self, node: ast.Copy) -> Optional[str]:
+    def visit_Copy(self, node: Copy) -> Optional[str]:
         source_type = node.source.accept(self)
         target_type = node.target.accept(self)
 
@@ -282,7 +282,7 @@ class TypeChecker:
             )
         return None
     
-    def visit_Move(self, node: ast.Move) -> Optional[str]:
+    def visit_Move(self, node: Move) -> Optional[str]:
         source_type = node.source.accept(self)
         target_type = node.target.accept(self)
 
@@ -300,7 +300,7 @@ class TypeChecker:
             )
         return None
     
-    def visit_Read(self, node: ast.Read) -> Optional[str]:
+    def visit_Read(self, node: Read) -> Optional[str]:
         source_type = node.source.accept(self)
 
         if source_type not in ["file", "text"]:
@@ -313,7 +313,7 @@ class TypeChecker:
         self.v_table.bind(node.target_name, node.target_type)
         return None
     
-    def visit_Write(self, node: ast.Write) -> Optional[str]:
+    def visit_Write(self, node: Write) -> Optional[str]:
         target_type = node.target.accept(self)
         node.content.accept(self)
 
@@ -327,25 +327,25 @@ class TypeChecker:
 
 # Literals and Identifiers ----------------------------------------
 
-    def visit_NumberLiteral(self, node: ast.NumberLiteral) -> Optional[str]:
+    def visit_NumberLiteral(self, node: NumberLiteral) -> Optional[str]:
         return "number"
     
-    def visit_DecimalLiteral(self, node: ast.DecimalLiteral) -> Optional[str]:
+    def visit_DecimalLiteral(self, node: DecimalLiteral) -> Optional[str]:
         return "decimal"
     
-    def visit_StringLiteral(self, node: ast.StringLiteral) -> Optional[str]:
+    def visit_StringLiteral(self, node: StringLiteral) -> Optional[str]:
         return "string"
 
-    def visit_InterpolatedString(self, node: ast.InterpolatedString) -> Optional[str]:
+    def visit_InterpolatedString(self, node: InterpolatedString) -> Optional[str]:
         return "string"
     
-    def visit_BooleanLiteral(self, node: ast.BooleanLiteral) -> Optional[str]:
+    def visit_BooleanLiteral(self, node: BooleanLiteral) -> Optional[str]:
         return "boolean"
     
-    def visit_NullLiteral(self, node: ast.NullLiteral) -> Optional[str]:
+    def visit_NullLiteral(self, node: NullLiteral) -> Optional[str]:
         return "null"
     
-    def visit_ListLiteral(self, node: ast.ListLiteral) -> Optional[str]:
+    def visit_ListLiteral(self, node: ListLiteral) -> Optional[str]:
         if len(node.elements) == 0:
             return "list<any>"
         element_type = node.elements[0].accept(self)
@@ -360,7 +360,7 @@ class TypeChecker:
                 return None
         return f"list<{element_type}>"
     
-    def visit_Identifier(self, node: ast.Identifier) -> Optional[str]:
+    def visit_Identifier(self, node: Identifier) -> Optional[str]:
         var_name = node.name
         try:
             var_type = self.v_table.lookup(var_name)
@@ -373,7 +373,7 @@ class TypeChecker:
             )
         return var_type
     
-    def visit_TaskIdentifier(self, node: ast.TaskIdentifier) -> Optional[str]:
+    def visit_TaskIdentifier(self, node: TaskIdentifier) -> Optional[str]:
         try:
             self.f_table.lookup(node.name)
             return "task"
@@ -388,7 +388,7 @@ class TypeChecker:
 
 # Expressions ----------------------------------------
 
-    def visit_TaskCall(self, node: ast.TaskCall) -> Optional[str]:
+    def visit_TaskCall(self, node: TaskCall) -> Optional[str]:
         try:
             signature = self.f_table.lookup(node.name)
         except Exception as e:
@@ -422,7 +422,7 @@ class TypeChecker:
 
         return None
     
-    def visit_ListLookup(self, node: ast.ListLookup) -> Optional[str]:
+    def visit_ListLookup(self, node: ListLookup) -> Optional[str]:
         target_type = node.target.accept(self)
         index_type = node.index.accept(self)
 
@@ -443,7 +443,7 @@ class TypeChecker:
             )
         return None
 
-    def visit_BinaryOp(self, node: ast.BinaryOp) -> Optional[str]:
+    def visit_BinaryOp(self, node: BinaryOp) -> Optional[str]:
         left_type = node.left.accept(self)
         right_type = node.right.accept(self)
         op = node.operator
@@ -475,7 +475,7 @@ class TypeChecker:
             )
             return None
     
-    def visit_UnaryOp(self, node: ast.UnaryOp) -> Optional[str]:
+    def visit_UnaryOp(self, node: UnaryOp) -> Optional[str]:
         operand_type = node.operand.accept(self)
         op = node.operator
 
@@ -500,5 +500,5 @@ class TypeChecker:
                 return None
         return None
     
-    def visit_AccessOp(self, node: ast.AccessOp) -> Optional[str]:
+    def visit_AccessOp(self, node: AccessOp) -> Optional[str]:
         pass
