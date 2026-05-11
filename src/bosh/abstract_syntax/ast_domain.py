@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 from .ast_base import ASTNode
 
 # Domain-specific statements
@@ -64,3 +64,36 @@ class Write(ASTNode):
     data: ASTNode
     def accept(self, visitor) -> Any:
         return visitor.visit_Write(self)
+
+
+@dataclass
+class GoUp(ASTNode):
+    def accept(self, visitor) -> Any:
+        return visitor.visit_GoUp(self)
+
+
+@dataclass
+class Execute(ASTNode):
+    target: ASTNode
+    def accept(self, visitor) -> Any:
+        return visitor.visit_Execute(self)
+
+
+@dataclass
+class Pause(ASTNode):
+    def accept(self, visitor) -> Any:
+        return visitor.visit_Pause(self)
+
+
+@dataclass
+class Wait(ASTNode):
+    time: ASTNode
+    def accept(self, visitor) -> Any:
+        return visitor.visit_Wait(self)
+
+
+@dataclass
+class Input(ASTNode):
+    prompt: Optional[ASTNode]
+    def accept(self, visitor) -> Any:
+        return visitor.visit_Input(self)

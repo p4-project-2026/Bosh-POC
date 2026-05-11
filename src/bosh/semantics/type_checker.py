@@ -33,7 +33,7 @@ class TypeChecker:
 # Definitions ----------------------------------------
 
     def visit_Assign(self, node: ast.Assign) -> Optional[str]:
-        var_name = node.target
+        var_name = node.target.name
         value_type = node.value.accept(self)
 
         if value_type is not None:
@@ -89,8 +89,7 @@ class TypeChecker:
 # General Statements ----------------------------------------
 
     def visit_Print(self, node: ast.Print) -> Optional[str]:
-        value = node.expression.accept(self)
-        print(value)
+        # value = node.expression.accept(self)
         return None
 
     def visit_IfElse(self, node: ast.IfElse) -> Optional[str]:

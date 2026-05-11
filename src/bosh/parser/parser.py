@@ -88,25 +88,33 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
+    def call_func(self, meta, args):
+        name = str(args[0])
+        arguments = args[1:] if len(args) > 1 else []
+        node = TaskCall(name=name, arguments=arguments)
+        node.set_meta(meta, self._filename)
+        return node
+
     # DEFINITIONS ----------------------------------------
     def assign(self, meta, args):
-        node = Assign(target=args[0], value=args[1])
+        target_node = Identifier(name=str(args[0]))
+        node = Assign(target=target_node, value=args[1])
         node.set_meta(meta, self._filename)
         return node
 
     def assign_type(self, meta, args):
-        target = args[0]
+        target_node = Identifier(name=str(args[0]))
         var_type = str(args[1])
         value = args[2] if len(args) > 2 else None
-        node = AssignType(target=target, var_type=var_type, value=value)
+        node = AssignType(target=target_node, var_type=var_type, value=value)
         node.set_meta(meta, self._filename)
         return node
 
     def assign_func(self, meta, args):
-        target = args[0]
-        parameters = [str(arg) for arg in args[1:-1]] 
+        target_node = Identifier(name=str(args[0]))
+        parameters = [Identifier(name=str(p)) for p in args[1:-1]]
         body = args[-1]
-        node = TaskDecl(name=target, parameters=parameters, body=body)
+        node = TaskDecl(name=target_node, parameters=parameters, body=body)
         node.set_meta(meta, self._filename)
         return node
 
@@ -115,11 +123,16 @@ class BoshTransformer(Transformer):
         node = GoTo(path=args[0])
         node.set_meta(meta, self._filename)
         return node
+    
+    def go_up(self, meta, args):
+        node = GoUp()
+        node.set_meta(meta, self._filename)
+        return node
 
     def make(self, meta, args):
         entity_type = str(args[0])
-        name = args[1].name if hasattr(args[1], "name") else str(args[1])
-        node = Make(entity_type=entity_type, name=name, location=args[2])
+        location = args[2] if len(args) > 2 else None
+        node = Make(entity_type=entity_type, name=args[1], location=location)
         node.set_meta(meta, self._filename)
         return node
 
@@ -149,7 +162,27 @@ class BoshTransformer(Transformer):
         return node
 
     def write(self, meta, args):
-        node = Write(target=args[0], data=args[1])
+        node = Write(target=args[1], data=args[0])
+        node.set_meta(meta, self._filename)
+        return node
+
+    def execute(self, meta, args):
+        node = Execute(target=args[0] if args else None)
+        node.set_meta(meta, self._filename)
+        return node
+
+    def pause(self, meta, args):
+        node = Pause()
+        node.set_meta(meta, self._filename)
+        return node
+
+    def wait(self, meta, args):
+        node = Wait(time=args[0] if args else None)
+        node.set_meta(meta, self._filename)
+        return node
+
+    def input(self, meta, args):
+        node = Input(prompt=args[0] if args else None)
         node.set_meta(meta, self._filename)
         return node
 
@@ -247,6 +280,26 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
+    def floor(self, meta, args):
+        node = UnaryOp(operator="floor", operand=args[0])
+        node.set_meta(meta, self._filename)
+        return node
+
+    def ceiling(self, meta, args):
+        node = UnaryOp(operator="ceiling", operand=args[0])
+        node.set_meta(meta, self._filename)
+        return node
+
+    def exponent(self, meta, args):
+        node = UnaryOp(operator="exponent", operand=args[0])
+        node.set_meta(meta, self._filename)
+        return node
+
+    def round(self, meta, args):
+        node = UnaryOp(operator="round", operand=args[0])
+        node.set_meta(meta, self._filename)
+        return node
+
     def list_look(self, meta, args):
         node = ListLookup(target=args[0], index=args[1])
         node.set_meta(meta, self._filename)
@@ -278,8 +331,8 @@ class BoshTransformer(Transformer):
         return node
 
     def unit(self, meta, args):
-        args[1] = str(args[1])[6:-6]
-        node = AccessOp(target=args[0], operation="unit", argument=args[1])
+        unit_str = str(args[1]).lower()
+        node = AccessOp(target=args[0], operation="unit", argument=StringLiteral(value=unit_str))
         node.set_meta(meta, self._filename)
         return node
 
@@ -290,6 +343,9 @@ class BoshTransformer(Transformer):
         return node
 
     def func(self, meta, args):
+        name = str(args[0])
+        arguments = args[1:] if len(args) > 1 else []
+        node = TaskCall(name=name, arguments=arguments)
         target = args[0]
         if len(args) > 1:
             node = TaskCall(name=target, arguments=args[1:])
@@ -312,32 +368,30 @@ class BoshTransformer(Transformer):
         return node
 
     def text(self, meta, args):
+        if len(args) == 1 and isinstance(args[0], StringLiteral):
+            node = args[0]
+            node.set_meta(meta, self._filename)
+            return node
+
         parts = []
         for part in args:
-            # str_chars returns raw Python str, interp returns AST node
-            if isinstance(part, str):
-                parts.append(StringLiteral(value=part))
-            else:
-                parts.append(part)
+            parts.append(part)
 
-        # If there is only a single string part, return a plain StringLiteral
-        if len(parts) == 1 and isinstance(parts[0], StringLiteral):
-            node = parts[0]
-        else:
-            node = InterpolatedString(parts=parts)
-
+        node = InterpolatedString(parts=parts)
         node.set_meta(meta, self._filename)
         return node
     
     def str_chars(self, meta, args):
-        return str(args[0])
-
+        content = "".join(str(arg) for arg in args)
+        node = StringLiteral(value=content)
+        node.set_meta(meta, self._filename)
+        return node
+    
     def interp(self, meta, args):
         return args[0]
 
     def boolean(self, meta, args):
-        value_str = str(args[0]).lower()
-        value = value_str == "true"
+        value = bool(str(args[0]).lower() == "true")
         node = BooleanLiteral(value=value)
         node.set_meta(meta, self._filename)
         return node
@@ -364,3 +418,21 @@ class BoshTransformer(Transformer):
 
     def paren(self, meta, args):
         return args[0]
+
+    def second(self, meta, args):
+        return "second"
+
+    def minute(self, meta, args):
+        return "minute"
+
+    def hour(self, meta, args):
+        return "hour"
+
+    def day(self, meta, args):
+        return "day"
+
+    def month(self, meta, args):
+        return "month"
+
+    def year(self, meta, args):
+        return "year"
