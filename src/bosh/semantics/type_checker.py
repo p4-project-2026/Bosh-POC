@@ -64,8 +64,8 @@ class TypeChecker:
         return None
         
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
-        param_types = {p: "any" for p in node.parameters} if node.parameters else {}
-        signature = FunctionSignature(parameters=param_types, return_type="any")
+        parameters = {param: "any" for param in node.parameters}
+        signature = FunctionSignature(parameters=parameters)
         try:
             self.f_table.bind(node.name, signature)
         except Exception as e:
@@ -76,7 +76,7 @@ class TypeChecker:
             )
         self.v_table.new_scope()
         try:
-            for param in param_types:
+            for param in node.parameters:
                 self.v_table.bind(param, "any")
             # Return type
             node.body.accept(self)
@@ -429,10 +429,20 @@ class TypeChecker:
         return getattr(signature, "return_type", "any")
 
 # Expressions ----------------------------------------
-
     def visit_TaskCall(self, node: ast.TaskCall) -> Optional[str]:
         try:
             signature = self.f_table.lookup(node.name)
+            if len(signature.param) != len(node.arguments):
+                self.error_handler.report_error(
+                    message=f"Task '{node.name}' expects {len(signature.param)} arguments, but {len(node.arguments)} were provided.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"expected_arg_count": len(signature.param), "provided_arg_count": len(node.arguments)},
+                )
+                return None
+            for arg in node.arguments:
+                arg.accept(self)
+        
         except Exception as e:
             self.error_handler.report_error(
                 message=f"Undefined task '{node.name}'",
@@ -440,29 +450,9 @@ class TypeChecker:
                 node=node,
                 details={"name": node.name},
             )
-
-        # Check amount of arguments
-        if len(node.arguments) != len(signature.param_types):
-            self.error_handler.report_error(
-                message=f"Task '{node.name}' expects {len(signature.param_types)} arguments, but {len(node.arguments)} were provided.",
-                error_type=TypeCheckError,
-                node=node
-            )
-
-        # Check argument types
-        for i, arg in enumerate(node.arguments):
-            if i < len(signature.param_types): 
-                arg_type = arg.accept(self)
-                expected_type = signature.param_types[i]
-                if arg_type != expected_type:
-                    self.error_handler.report_error(
-                        message=f"Argument {i+1} of task '{node.name}' expects type '{expected_type}', but got '{arg_type}'.",
-                        error_type=TypeCheckError,
-                        node=node,
-                        details={"argument_index": i, "expected": expected_type, "actual": arg_type},
-                    )
-
-        return None
+            return None
+        
+        return signature.return_type
     
     def visit_ListLookup(self, node: ast.ListLookup) -> Optional[str]:
         target_type = node.target.accept(self)
@@ -491,8 +481,10 @@ class TypeChecker:
         op = node.operator
         
         if op in ["plus", "minus", "div", "mult", "mod"]:
-            if left_type in ["int", "decimal"] and right_type in ["int", "decimal"]:
-                return left_type
+            if left_type in ["number", "decimal"] and right_type in ["number", "decimal"]:
+                return "decimal" if "decimal" in [left_type, right_type] else "number"
+            elif op == "plus" and left_type == "text" and right_type == "text":
+                return "text"
             else:
                 self.error_handler.report_error(
                     message=f"Operator '{op}' not supported for types '{left_type}' and '{right_type}'",
@@ -501,13 +493,42 @@ class TypeChecker:
                     details={"left_type": left_type, "right_type": right_type},
                 )
                 return None
-        #TODO Finish
+            
         elif op in ["eq", "neq"]:
-            pass
+            numeric_eq = (left_type in ["number", "decimal"] and right_type in ["number", "decimal"])
+            null_eq = (left_type == "null" or right_type == "null")
+            if left_type != right_type and not numeric_eq and not null_eq:
+                self.error_handler.report_error(
+                    message=f"Operator '{op}' not supported for types '{left_type}' and '{right_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"left_type": left_type, "right_type": right_type},
+                )
+                return None
+            return "boolean"
+        
         elif op in ["or", "and"]:
-            pass
+            if left_type != "boolean" or right_type != "boolean":
+                self.error_handler.report_error(
+                    message=f"Logical operator '{op}' requires boolean operands, got '{left_type}' and '{right_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"left_type": left_type, "right_type": right_type},
+                )
+                return None
+            return "boolean"
+        
         elif op in ["lt", "gt", "gte", "lte"]:
-            pass
+            if left_type not in ["number", "decimal", "date", "time"] or right_type not in ["number", "decimal", "date", "time"]:
+                self.error_handler.report_error(
+                    message=f"Relational operator '{op}' requires numeric or temporal operands, got '{left_type}' and '{right_type}'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"left_type": left_type, "right_type": right_type},
+                )
+                return None
+            return "boolean"
+        
         else:
             self.error_handler.report_error(
                 message=f"Unsupported operator '{op}'",
@@ -522,7 +543,7 @@ class TypeChecker:
         op = node.operator
 
         # negativ mangler i grammaren?
-        if op == "-":
+        if op == "neg":
             if operand_type not in ["number", "decimal"]:
                 self.error_handler.report_error(
                     message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'number' or 'decimal'.",

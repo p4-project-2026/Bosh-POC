@@ -104,7 +104,7 @@ class BoshTransformer(Transformer):
 
     def assign_func(self, meta, args):
         target = args[0]
-        parameters = args[1] if len(args) > 2 else []
+        parameters = [str(arg) for arg in args[1:-1]] 
         body = args[-1]
         node = TaskDecl(name=target, parameters=parameters, body=body)
         node.set_meta(meta, self._filename)
@@ -290,7 +290,11 @@ class BoshTransformer(Transformer):
         return node
 
     def func(self, meta, args):
-        node = TaskIdentifier(name=str(args[0]))
+        target = args[0]
+        if len(args) > 1:
+            node = TaskCall(name=target, arguments=args[1:])
+        else:
+            node = TaskIdentifier(name=target)
         node.set_meta(meta, self._filename)
         return node
     
