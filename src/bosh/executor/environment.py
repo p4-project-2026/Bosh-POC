@@ -1,6 +1,6 @@
 from typing import Optional
 from bosh.executor.scope_stack2 import ScopeStack2
-from bosh.executor.Store import Store
+from bosh.executor.store import Store
 from bosh.executor.table import Table
 from bosh.executor.function_binding import FunctionBinding
 from bosh.executor.var_table import VarTable
