@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
-from bosh.semantics.type_checker import BoshTypeError, ScopeStack, FuncTable
-
+from bosh.semantics.type_checker import ScopeStack, FuncTable, FunctionSignature, BoshTypeError
+from bosh.executor.environment import Environment
 
 @dataclass
 class Position():
@@ -25,9 +25,9 @@ class ASTNode():
             )
 
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        raise NotImplementedError(self.__class__.__name__ + " does not implement check()")
+        raise BoshTypeError(self.__class__.__name__ + " does not implement check()", self)
     
-    def execute(self, env: 'Environment') -> Any:
+    def execute(self, env: Environment) -> Any:
         raise NotImplementedError(self.__class__.__name__ + " does not implement execute()")
 
 
@@ -38,7 +38,7 @@ class Program(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return self.block.check(v_table, f_table)
     
-    def execute(self, env: 'Environment') -> Any:
+    def execute(self, env: Environment) -> Any:
         return self.block.execute(env)
 
 
@@ -49,9 +49,7 @@ class Block(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         for stmt in self.statements:
             stmt.check(v_table, f_table)
-        return None
     
-    def execute(self, env: 'Environment') -> Any:
+    def execute(self, env: Environment) -> Any:
         for stmt in self.statements:
             stmt.execute(env)
-        return None
