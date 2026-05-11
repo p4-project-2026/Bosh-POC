@@ -148,6 +148,18 @@ class TaskCall(ASTNode):
 
     def execute(self, env: Environment) -> Any:
         try:
+            task_func = env.enter_function_scope(self.name)
+        except Exception as e:
+            raise BoshRuntimeError(f"error executing task '{self.name}': {e}", self)
+        for i in range(len(task_func.parameters)):
+            try:
+                env.assign_variable(task_func.parameters[i], self.arguments[i].execute(env))
+            except Exception as e:
+                raise BoshRuntimeError(f"Error assigning argument {i+1} for task '{self.name}': {e}", self)
+        return_value = task_func.execute(env)
+        env.exit_function_scope()
+        return return_value
+
 
 @dataclass
 class ListLookup(ASTNode):
@@ -204,6 +216,21 @@ class BinaryOp(ASTNode):
         else:
             raise BoshTypeError(f"Unsupported operator '{op}'", self)
 
+        def execute(self, env: Environment) -> Any:
+            match self.operator:
+                case "plus":
+                    return self.left.execute(env) + self.right.execute(env)
+                case "minus":
+                    return self.left.execute(env) - self.right.execute(env)
+                case "mult":
+                    return self.left.execute(env) * self.right.execute(env)
+                case "div":
+                    return self.left.execute(env) / self.right.execute(env)
+                case "mod":
+                    return self.left.execute(env) % self.right.execute(env)
+                # Implement other operators as needed
+                case _:
+                    raise BoshRuntimeError(f"Unsupported operator '{self.operator}'", self)
 
 @dataclass
 class UnaryOp(ASTNode):
