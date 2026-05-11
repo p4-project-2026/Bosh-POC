@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
-from .ast_base import ASTNode, Block
-import bosh.semantics.FuncTable as FuncTable
-from bosh.semantics.ScopeStack import ScopeStack
-from bosh.executor.environment import Environment
+from bosh.semantics.type_checker import BoshTypeError, ScopeStack, FuncTable
+
 
 @dataclass
 class Position():
@@ -26,27 +24,34 @@ class ASTNode():
                 filename=filename
             )
 
-    # NOT USED ANYMORE
-    def accept(self, visitor) -> Any:
-        raise NotImplementedError()
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        raise NotImplementedError(self.__class__.__name__ + " does not implement check()")
     
-    #NEW:
-    def type_check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        raise NotImplementedError()
-    
-    def execute(self, env: Environment) -> Any:
-        raise NotImplementedError()
+    def execute(self, env: 'Environment') -> Any:
+        raise NotImplementedError(self.__class__.__name__ + " does not implement execute()")
 
 
 @dataclass
 class Program(ASTNode):
     block: Block
-    def accept(self, visitor) -> Any:
-        return visitor.visit_Program(self)
+    
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        return self.block.check(v_table, f_table)
+    
+    def execute(self, env: 'Environment') -> Any:
+        return self.block.execute(env)
 
 
 @dataclass
 class Block(ASTNode):
     statements: List[ASTNode]
-    def accept(self, visitor) -> Any:
-        return visitor.visit_Block(self)
+
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        for stmt in self.statements:
+            stmt.check(v_table, f_table)
+        return None
+    
+    def execute(self, env: 'Environment') -> Any:
+        for stmt in self.statements:
+            stmt.execute(env)
+        return None

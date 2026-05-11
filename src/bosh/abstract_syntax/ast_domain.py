@@ -1,6 +1,4 @@
-from dataclasses import dataclass
-from typing import Any, Optional
-from .ast_base import ASTNode
+from . import *
 
 # Domain-specific statements
 

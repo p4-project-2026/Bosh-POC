@@ -1,48 +1,4 @@
-from dataclasses import dataclass
-from typing import List, Any, Optional
-from bosh.abstract_syntax.ast_expressions import Identifier
-from bosh.error_handler import ErrorHandler
-from .ast_base import ASTNode, Block
-import bosh.semantics.FuncTable as FuncTable
-from bosh.semantics.ScopeStack import ScopeStack
-from bosh.semantics.type_checker import TypeCheckError
-from bosh.executor.environment import Environment
-
-@dataclass
-class Assign(ASTNode):
-    target: 'Identifier'
-    value: ASTNode
-    
-    def type_check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        value_type = self.value.type_check(v_table, f_table)
-
-        if value_type is None:
-            raise BoshTypeError(f"Value assigned to '{self.target.name}' is undefined.", self)
-
-        v_table.bind(self.target.name, value_type)
-        return None
-
-    def execute(self, env: Environment) -> Any:
-        pass
-    
-
-@dataclass
-class AssignType(ASTNode):
-    target: ASTNode
-    var_type: str
-    value: Optional[ASTNode]
-    def accept(self, visitor) -> Any:
-        return visitor.visit_AssignType(self)
-
-
-@dataclass
-class TaskDecl(ASTNode):
-    name: str
-    parameters: List[str]
-    body: Block
-    def accept(self, visitor) -> Any:
-        return visitor.visit_TaskDecl(self)
-
+from . import *
 
 @dataclass
 class Print(ASTNode):

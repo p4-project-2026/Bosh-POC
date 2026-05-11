@@ -1,11 +1,9 @@
-
-
-
 from typing import Optional
 from bosh.executor.scope_stack2 import ScopeStack2
-from bosh.executor.store import Store
+from bosh.executor.Store import Store
 from bosh.executor.table import Table
 from bosh.executor.function_binding import FunctionBinding
+
 class Environment:
     def __init__(self):
         self.v_table = ScopeStack2()
