@@ -328,8 +328,7 @@ class BoshTransformer(Transformer):
         return node
 
     def unit(self, meta, args):
-        unit_str = str(args[1]).lower()
-        node = AccessOp(target=args[0], operation="unit", argument=StringLiteral(value=unit_str))
+        node = Unit(target=args[0], unit_type=str(args[1]).lower())
         node.set_meta(meta, self._filename)
         return node
 
