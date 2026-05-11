@@ -52,4 +52,6 @@ class Block(ASTNode):
     
     def execute(self, env: Environment) -> Any:
         for stmt in self.statements:
-            stmt.execute(env)
+            return_val = stmt.execute(env)
+            if return_val is not None:
+                return return_val
