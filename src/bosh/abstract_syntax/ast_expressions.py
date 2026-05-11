@@ -1,4 +1,5 @@
 from .ast_base import *
+from bosh.error_handler import BoshRuntimeError, BoshTypeError
 
 @dataclass
 class NumberLiteral(ASTNode):
@@ -38,6 +39,9 @@ class InterpolatedString(ASTNode):
     parts: List[ASTNode]
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        for part in self.parts:
+            if part.check(v_table, f_table) is None:
+                raise BoshTypeError("Undefined variable in interpolated string", self)
         return "string"
 
     def execute(self, env: Environment) -> str:
@@ -63,6 +67,8 @@ class NullLiteral(ASTNode):
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "null"
+    def execute(self, env: Environment) -> None:
+        return None
 
 
 @dataclass
@@ -79,6 +85,8 @@ class ListLiteral(ASTNode):
                 raise BoshTypeError(f"List elements must all be of the same type, expected {element_type}, got {elem_type}", self)
         return f"list<{element_type}>"
 
+    def execute(self, env: Environment) -> List[Any]:
+        return [elem.execute(env) for elem in self.elements]
 
 @dataclass
 class Identifier(ASTNode):
@@ -91,6 +99,12 @@ class Identifier(ASTNode):
             raise BoshTypeError(f"Undefined variable '{self.name}'", self)
         return var_type
 
+    def execute(self, env: Environment) -> Any:
+        try:
+            value = env.lookup_variable(self.name)
+        except Exception:
+            raise BoshRuntimeError(f"Undefined variable '{self.name}'", self)
+        return value
 
 @dataclass
 class TaskIdentifier(ASTNode):
@@ -102,6 +116,14 @@ class TaskIdentifier(ASTNode):
         except Exception:
             raise BoshTypeError(f"Undefined task '{self.name}'", self)
         return var_type
+    
+    def execute(self, env: Environment) -> None:
+        try:
+            value = env.lookup_task(self.name)
+        except Exception:
+            raise BoshRuntimeError(f"Undefined task '{self.name}'", self)
+        return value
+        
 
 
 @dataclass
@@ -124,6 +146,8 @@ class TaskCall(ASTNode):
                 if arg_type != expected_type:
                     raise BoshTypeError(f"Argument {i+1} of task '{self.name}' expects type '{expected_type}', but got '{arg_type}'.", self)                
 
+    def execute(self, env: Environment) -> Any:
+        try:
 
 @dataclass
 class ListLookup(ASTNode):
