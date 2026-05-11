@@ -24,7 +24,7 @@ class AssignType(ASTNode):
 @dataclass
 class TaskDecl(ASTNode):
     name: str
-    parameters: List[str]
+    parameters: dict[str, str]
     body: Block
     def accept(self, visitor) -> Any:
         return visitor.visit_TaskDecl(self)

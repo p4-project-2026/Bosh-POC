@@ -111,9 +111,13 @@ class BoshTransformer(Transformer):
         return node
 
     def assign_func(self, meta, args):
-        target_node = Identifier(name=str(args[0]))
-        parameters = [Identifier(name=str(p)) for p in args[1:-1]]
+        target_node = getattr(args[0], "name", str(args[0]))
         body = args[-1]
+        parameters = {}
+        for arg in args[1:-1]:
+            param_name = getattr(arg, "name", str(arg))
+            parameters[param_name] = "any"
+
         node = TaskDecl(name=target_node, parameters=parameters, body=body)
         node.set_meta(meta, self._filename)
         return node
@@ -347,14 +351,10 @@ class BoshTransformer(Transformer):
         arguments = args[1:] if len(args) > 1 else []
         node = TaskCall(name=name, arguments=arguments)
         target = args[0]
-        if len(args) > 1:
-            node = TaskCall(name=target, arguments=args[1:])
-        else:
-            node = TaskIdentifier(name=target)
+
+        node = TaskCall(name=target, arguments=arguments)
         node.set_meta(meta, self._filename)
         return node
-    
-    
 
     def number(self, meta, args):
         node = NumberLiteral(value=int(args[0]))

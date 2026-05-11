@@ -231,7 +231,7 @@ class TypeChecker:
         return return_type
     
 # Domain Statements ----------------------------------------
-        
+        #TODO test!!!
     def visit_GoTo(self, node: ast.Goto) -> Optional[str]:
         path_type = node.path.accept(self)
 
@@ -387,6 +387,18 @@ class TypeChecker:
                 return None
         return f"list<{element_type}>"
     
+    def visit_DateLiteral(self, node: ast.DateLiteral) -> Optional[str]:
+        return "date"
+
+    def visit_TimeLiteral(self, node: ast.TimeLiteral) -> Optional[str]:
+        return "time"
+
+    def visit_FolderLiteral(self, node: ast.FolderLiteral) -> Optional[str]:
+        return "folder"
+
+    def visit_FileLiteral(self, node: ast.FileLiteral) -> Optional[str]:
+        return "file"
+    
     def visit_Identifier(self, node: ast.Identifier) -> Optional[str]:
         var_name = node.name
         try:
@@ -478,6 +490,8 @@ class TypeChecker:
         left_type = node.left.accept(self)
         right_type = node.right.accept(self)
         op = node.operator
+        if left_type == "any" or right_type == "any":
+            return "any"
         
         if op in ["plus", "minus", "div", "mult", "mod"]:
             if left_type in ["number", "decimal"] and right_type in ["number", "decimal"]:
@@ -597,16 +611,36 @@ class TypeChecker:
                     details={"target_type": target_type, "operation": op},
                 )
                 return None
-            return "boolean"
-        #TODO arguments for starts_with, ends_with, regex
+            
 
+            if node.argument is not None:
+                arg_type = node.argument.accept(self)
+                if arg_type != "text":
+                    self.error_handler.report_error(
+                        message=f"Argument for operation '{op}' must be of type 'text', got '{arg_type}'.",
+                        error_type=TypeCheckError,
+                        node=node,
+                        details={"argument_type": arg_type, "operation": op},
+                    )
+                    return None
+            return "boolean"
+        
         #TODO access ops for unit, and parsing for date and time literals
         elif op == "unit":
-            if target_type not in ["date", "time"]:
-                pass
+            if target_type in ["number", "decimal"]:
+                return "time"
+            elif target_type == "time":
+                return "number"
+            
+            else:
+                self.error_handler.report_error(
+                    message=f"Time units require a numeric, date, or time target, got '{target_type}'.",
+                    error_type=TypeCheckError, node=node
+                )
+                return None   
         
         elif op == "now":
-            return "time"
+            return "date"
         
         elif op == "here":
             return "folder"

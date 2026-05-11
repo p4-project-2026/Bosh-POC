@@ -51,6 +51,30 @@ class ListLiteral(ASTNode):
     def accept(self, visitor) -> Any:
         return visitor.visit_ListLiteral(self)
 
+@dataclass
+class DateLiteral(ASTNode):
+    value: str 
+    def accept(self, visitor) -> Any:
+        return visitor.visit_DateLiteral(self)
+
+@dataclass
+class TimeLiteral(ASTNode):
+    amount: float 
+    unit: str 
+    def accept(self, visitor) -> Any:
+        return visitor.visit_TimeLiteral(self)
+
+@dataclass
+class FolderLiteral(ASTNode):
+    path: str
+    def accept(self, visitor) -> Any:
+        return visitor.visit_FolderLiteral(self)
+
+@dataclass
+class FileLiteral(ASTNode):
+    path: str
+    def accept(self, visitor) -> Any:
+        return visitor.visit_FileLiteral(self)
 
 @dataclass
 class Identifier(ASTNode):
