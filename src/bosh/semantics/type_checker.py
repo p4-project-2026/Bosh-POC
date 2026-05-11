@@ -64,8 +64,7 @@ class TypeChecker:
         return None
         
     def visit_TaskDecl(self, node: ast.TaskDecl) -> Optional[str]:
-        #TODO complete
-        param_types = ["any"] * len(node.parameters)
+        param_types = {p: "any" for p in node.parameters} if node.parameters else {}
         signature = FunctionSignature(parameters=param_types, return_type="any")
         try:
             self.f_table.bind(node.name, signature)
@@ -75,19 +74,16 @@ class TypeChecker:
                 error_type=TypeCheckError,
                 node=node,
             )
-        self.v_table.new_scope() # New scope for task body
+        self.v_table.new_scope()
         try:
-            for param in node.parameters:
+            for param in param_types:
                 self.v_table.bind(param, "any")
             # Return type
-            body_type = node.body.accept(self)
-            # Copilot autocomplete, tror det virker?
-            signature.return_type = body_type if body_type else "any"
+            node.body.accept(self)
         
         finally:
             self.v_table.exit_scope()
         
-        # return "task"?
         return None
 
 # General Statements ----------------------------------------
@@ -278,6 +274,7 @@ class TypeChecker:
     
     def visit_Rename(self, node: ast.Rename) -> Optional[str]:
         target_type = node.target.accept(self)
+        new_name_type = node.new_name.accept(self)
 
         if target_type not in ["file", "folder", "text"]:
             self.error_handler.report_error(
@@ -285,7 +282,13 @@ class TypeChecker:
                 error_type=TypeCheckError,
                 node=node
             )
-        self.v_table.bind(node.new_name, target_type)
+        if new_name_type not in ["text", "file", "folder"]:
+            self.error_handler.report_error(
+                message=f"Cannot use type '{new_name_type}' as a new name. Expected 'text'.",
+                error_type=TypeCheckError,
+                node=node
+            )
+
         return None
 
     def visit_Copy(self, node: ast.Copy) -> Optional[str]:
@@ -400,8 +403,7 @@ class TypeChecker:
     
     def visit_TaskIdentifier(self, node: ast.TaskIdentifier) -> Optional[str]:
         try:
-            self.f_table.lookup(node.name)
-            return "task"
+            signature = self.f_table.lookup(node.name)
         except Exception as e:
             self.error_handler.report_error(
                 message=f"Undefined task '{node.name}'",
@@ -409,7 +411,22 @@ class TypeChecker:
                 node=node,
                 details={"name": node.name},
             )
-        return var_type
+            return None
+        provided_args = getattr(node, 'args', getattr(node, 'arguments', []))
+        expected_args = signature.param
+
+        if len(provided_args) != len(expected_args):
+            self.error_handler.report_error(
+                message=f"Task '{node.name}' expects {len(expected_args)} arguments, but {len(provided_args)} were provided.",
+                error_type=TypeCheckError,
+                node=node,
+                details={"expected_arg_count": len(expected_args), "provided_arg_count": len(provided_args)},
+            )
+            return None
+        for arg in provided_args:
+            arg.accept(self)
+
+        return getattr(signature, "return_type", "any")
 
 # Expressions ----------------------------------------
 

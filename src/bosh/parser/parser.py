@@ -154,6 +154,9 @@ class BoshTransformer(Transformer):
         return node
 
     # EXPRESSIONS ----------------------------------------
+    def call_func(self, meta, args):
+        return self.func(meta, args)
+
     def or_(self, meta, args):
         node = BinaryOp(operator="or", left=args[0], right=args[1])
         node.set_meta(meta, self._filename)
@@ -290,11 +293,14 @@ class BoshTransformer(Transformer):
         node = TaskIdentifier(name=str(args[0]))
         node.set_meta(meta, self._filename)
         return node
+    
+    
 
     def number(self, meta, args):
         node = NumberLiteral(value=int(args[0]))
         node.set_meta(meta, self._filename)
         return node
+        
 
     def decimal(self, meta, args):
         node = DecimalLiteral(value=float(args[0]))
