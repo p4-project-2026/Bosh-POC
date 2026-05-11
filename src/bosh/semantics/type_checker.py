@@ -563,4 +563,59 @@ class TypeChecker:
         return None
     
     def visit_AccessOp(self, node: ast.AccessOp) -> Optional[str]:
-        pass
+        target_type = node.target.accept(self)
+        op = node.operation
+
+        if op == "file_name":
+            if target_type not in ["file", "folder"]:
+                self.error_handler.report_error(
+                    message=f"Cannot get file name of type '{target_type}'. Expected 'file' or 'folder'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"target_type": target_type},
+                )
+                return None
+            return "text"
+        
+        elif op == "age":
+            if target_type not in ["file", "folder"]:
+                self.error_handler.report_error(
+                    message=f"Cannot get age of type '{target_type}'. Expected 'file' or 'folder'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"target_type": target_type},
+                )
+                return None
+            return "number"
+        
+        elif op in ["starts_with", "ends_with", "regex"]:
+            if target_type != "text":
+                self.error_handler.report_error(
+                    message=f"Cannot apply operation '{op}' to type '{target_type}'. Expected 'text'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"target_type": target_type, "operation": op},
+                )
+                return None
+            return "boolean"
+        #TODO arguments for starts_with, ends_with, regex
+
+        #TODO access ops for unit, and parsing for date and time literals
+        elif op == "unit":
+            if target_type not in ["date", "time"]:
+                pass
+        
+        elif op == "now":
+            return "time"
+        
+        elif op == "here":
+            return "folder"
+        
+        else:
+            self.error_handler.report_error(
+                message=f"Unsupported access operation '{op}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"operation": op},
+            )
+            return None
