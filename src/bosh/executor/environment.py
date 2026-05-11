@@ -6,6 +6,7 @@ from bosh.executor.scope_stack2 import ScopeStack2
 from bosh.executor.store import Store
 from bosh.executor.table import Table
 from bosh.executor.function_binding import FunctionBinding
+from bosh.executor.var_table import VarTable
 class Environment:
     def __init__(self):
         self.v_table = ScopeStack2()
@@ -45,7 +46,11 @@ class Environment:
             return self.store.get(loc)  # Retrieve the value from the store using the location
         except Exception as e:
             raise Exception(f"Error looking up variable '{name}': {e}")
-        
+    
+    def snapshot(self) -> VarTable:
+        """Create a snapshot of the current variable scope stack. This is used for capturing the environment when defining a function."""
+        return self.v_table.snapshot()
+    
     def bind_function(self, name: str, function_def: FunctionBinding):
         """Bind a function definition to a name in the function table."""
         try:
