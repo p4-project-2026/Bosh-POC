@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
-from .ast_base import ASTNode, Block
 import bosh.semantics.FuncTable as FuncTable
 from bosh.semantics.ScopeStack import ScopeStack
 from bosh.executor.environment import Environment
