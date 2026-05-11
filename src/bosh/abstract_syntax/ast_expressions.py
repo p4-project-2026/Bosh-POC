@@ -7,6 +7,9 @@ class NumberLiteral(ASTNode):
     value: float
     def accept(self, visitor) -> Any:
         return visitor.visit_NumberLiteral(self)
+    
+    def execute(self, env: Environment) -> float:
+        return self.value
 
 
 @dataclass
@@ -14,6 +17,9 @@ class DecimalLiteral(ASTNode):
     value: float
     def accept(self, visitor) -> Any:
         return visitor.visit_DecimalLiteral(self)
+    
+    def execute(self, env: Environment) -> float:
+        return self.value
 
 
 @dataclass
@@ -22,6 +28,9 @@ class StringLiteral(ASTNode):
     def accept(self, visitor) -> Any:
         return visitor.visit_StringLiteral(self)
 
+    def execute(self, env: Environment) -> str:
+        return self.value
+
 
 @dataclass
 class InterpolatedString(ASTNode):
@@ -29,12 +38,21 @@ class InterpolatedString(ASTNode):
     def accept(self, visitor) -> Any:
         return visitor.visit_InterpolatedString(self)
 
-
+    def execute(self, env: Environment) -> str:
+        result = ""
+        for part in self.parts:
+            value = part.execute(env)
+            result += str(value)
+        return result
+    
 @dataclass
 class BooleanLiteral(ASTNode):
     value: bool
     def accept(self, visitor) -> Any:
         return visitor.visit_BooleanLiteral(self)
+
+    def execute(self, env: Environment) -> bool:
+        return self.value
 
 
 @dataclass
