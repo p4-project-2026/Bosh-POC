@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Any, Optional
-from bosh.semantics.type_checker import ScopeStack, FuncTable, FunctionSignature, BoshTypeError
+from bosh.semantics.type_checker import ScopeStack, FuncTable, FunctionSignature, BoshTypeError, BoshRuntimeError
 from bosh.executor.environment import Environment
 
 @dataclass
@@ -10,7 +10,6 @@ class Position():
     end_col: Optional[int] = None
     filename: Optional[str] = None
 
-# Core/base AST nodes
 
 class ASTNode():
     pos: Optional[Position] = None

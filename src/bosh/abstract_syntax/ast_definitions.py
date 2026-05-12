@@ -60,7 +60,7 @@ class TaskDecl(ASTNode):
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         param_types = {param: "any" for param in self.parameters}
-        signature = FunctionSignature(param=param_types, return_type="any")
+        signature = FunctionSignature(parameters=param_types, return_type="any")
 
         try:
             f_table.bind(self.name, signature)
