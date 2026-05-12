@@ -160,12 +160,12 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
-    def read(self, meta, args):
+    def read_file(self, meta, args):
         node = Read(source=args[0])
         node.set_meta(meta, self._filename)
         return node
 
-    def write(self, meta, args):
+    def write_file(self, meta, args):
         node = Write(target=args[1], data=args[0])
         node.set_meta(meta, self._filename)
         return node
@@ -191,6 +191,9 @@ class BoshTransformer(Transformer):
         return node
 
     # EXPRESSIONS ----------------------------------------
+    def call_func(self, meta, args):
+        return self.func(meta, args)
+
     def or_(self, meta, args):
         node = BinaryOp(operator="or", left=args[0], right=args[1])
         node.set_meta(meta, self._filename)
@@ -346,6 +349,9 @@ class BoshTransformer(Transformer):
         name = str(args[0])
         arguments = args[1:] if len(args) > 1 else []
         node = TaskCall(name=name, arguments=arguments)
+        target = args[0]
+
+        node = TaskCall(name=target, arguments=arguments)
         node.set_meta(meta, self._filename)
         return node
 
@@ -353,6 +359,7 @@ class BoshTransformer(Transformer):
         node = NumberLiteral(value=int(args[0]))
         node.set_meta(meta, self._filename)
         return node
+        
 
     def decimal(self, meta, args):
         node = DecimalLiteral(value=float(args[0]))
