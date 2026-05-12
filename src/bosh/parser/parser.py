@@ -160,12 +160,12 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
-    def read(self, meta, args):
+    def read_file(self, meta, args):
         node = Read(source=args[0])
         node.set_meta(meta, self._filename)
         return node
 
-    def write(self, meta, args):
+    def write_file(self, meta, args):
         node = Write(target=args[1], data=args[0])
         node.set_meta(meta, self._filename)
         return node

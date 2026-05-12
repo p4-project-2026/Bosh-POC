@@ -1,4 +1,5 @@
 from typing import Any, Optional
+from xmlrpc.client import boolean
 import bosh.abstract_syntax.ast_nodes as ast
 from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
@@ -237,13 +238,21 @@ class TypeChecker:
 
         if path_type not in ["text", "folder"]:
             self.error_handler.report_error(
-                message=f"Path in go to statement must be of type 'text' or 'folder', got '{path_type}'",
+                message=f"Path in 'go to' statement must be of type 'text' or 'folder', got '{path_type}'",
                 error_type=TypeCheckError,
                 node=node
             )
         return None
     
     def visit_Make(self, node: ast.Make) -> Optional[str]:
+        name_type = node.name.accept(self)
+        if name_type is not None and name_type != "text":
+            self.error_handler.report_error(
+                message=f"Cannot use type '{name_type}' as a new name. Expected 'text'.",
+                error_type=TypeCheckError, 
+                node=node
+            )
+
         if node.entity_type not in ["file", "folder"]:
              self.error_handler.report_error(
                 message=f"Entity type in make statement must be of type 'file' or 'folder', got '{node.entity_type}'",
@@ -253,12 +262,10 @@ class TypeChecker:
         location_type = node.location.accept(self)
         if location_type not in ["text", "folder"]:
             self.error_handler.report_error(
-                message=f"Path in make statement must be of type 'text' or 'folder', got '{location_type}'",
+                message=f"Path in 'make' statement must be of type 'text' or 'folder', got '{location_type}'",
                 error_type=TypeCheckError,
                 node=node
             )
-        self.v_table.bind(node.name, node.entity_type)
-             
         return None
     
     def visit_Delete(self, node: ast.Delete) -> Optional[str]:
@@ -309,6 +316,9 @@ class TypeChecker:
             )
         return None
     
+    def visit_GoUp(self, node: ast.GoUp) -> Optional[str]:
+        return None
+    
     def visit_Move(self, node: ast.Move) -> Optional[str]:
         source_type = node.source.accept(self)
         target_type = node.target.accept(self)
@@ -337,12 +347,11 @@ class TypeChecker:
                 node=node
             )
     
-        self.v_table.bind(node.target_name, node.target_type)
         return None
     
     def visit_Write(self, node: ast.Write) -> Optional[str]:
         target_type = node.target.accept(self)
-        node.content.accept(self)
+        data_type = node.data.accept(self)
 
         if target_type not in ["file", "text"]:
             self.error_handler.report_error(
@@ -350,7 +359,37 @@ class TypeChecker:
                 error_type=TypeCheckError,
                 node=node
             )
+        if data_type != "text":
+            self.error_handler.report_error(
+                message=f"Data in write statement must be of type 'text', got '{data_type}'",
+                error_type=TypeCheckError,
+                node=node
+            )
         return None
+
+    def visit_Execute(self, node: ast.Execute) -> Optional[str]:
+        target_type = node.target.accept(self)
+        if target_type not in ["file", "text"]:
+            self.error_handler.report_error(
+                message=f"Cannot execute type '{target_type}'. Expected file or path.",
+                error_type=TypeCheckError,
+                node=node
+            )
+        return None
+    
+    def visit_Pause(self, node: ast.Pause) -> Optional[str]:
+        return None
+    
+    def visit_Wait(self, node: ast.Wait) -> Optional[str]:
+        duration_type = node.time.accept(self)
+        if duration_type not in ["number", "decimal", "time"]:
+            self.error_handler.report_error(
+                message=f"Duration in 'wait' must be of type 'number', 'decimal' or 'time', got '{duration_type}'",
+                error_type=TypeCheckError,
+                node=node,
+            )
+        return None
+
 
 # Literals and Identifiers ----------------------------------------
 
@@ -398,6 +437,18 @@ class TypeChecker:
 
     def visit_FileLiteral(self, node: ast.FileLiteral) -> Optional[str]:
         return "file"
+    
+    def visit_Input(self, node: ast.Input) -> Optional[str]:
+            prompt_type = node.prompt.accept(self) if node.prompt else None
+            if prompt_type != "text":
+                self.error_handler.report_error(
+                    message=f"Prompt in input statement must be of type 'text', got '{prompt_type}'",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"prompt_type": prompt_type},
+                )
+                return None
+            return "text"
     
     def visit_Identifier(self, node: ast.Identifier) -> Optional[str]:
         var_name = node.name
@@ -469,7 +520,7 @@ class TypeChecker:
         target_type = node.target.accept(self)
         index_type = node.index.accept(self)
 
-        if target_type != "list":
+        if not isinstance(target_type, str) or not target_type.startswith("list"):
             self.error_handler.report_error(
                 message=f"Cannot index type '{target_type}'. Expected a list.",
                 error_type=TypeCheckError,
@@ -556,7 +607,7 @@ class TypeChecker:
         op = node.operator
 
         # negativ mangler i grammaren?
-        if op == "neg":
+        if op in ["-", "neg", "negative"]:
             if operand_type not in ["number", "decimal"]:
                 self.error_handler.report_error(
                     message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'number' or 'decimal'.",
@@ -565,7 +616,8 @@ class TypeChecker:
                     details={"operand_type": operand_type},
                 )
                 return None
-        elif op == "not":
+            return operand_type
+        elif op in ["not_", "not", "!"]:
             if operand_type != "boolean":
                 self.error_handler.report_error(
                     message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'boolean'.",
@@ -574,7 +626,64 @@ class TypeChecker:
                     details={"operand_type": operand_type},
                 )
                 return None
-        return None
+            return "boolean"
+        
+        elif op in ["floor", "ceiling", "round"]:
+            if operand_type not in ["number", "decimal"]:
+                self.error_handler.report_error(
+                    message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'number' or 'decimal'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"operand_type": operand_type},
+                )
+                return None
+            return "number"
+        
+        elif op == "exponent":
+            if operand_type not in ["number", "decimal"]:
+                self.error_handler.report_error(
+                    message=f"Unary operator 'exponent' not supported for type '{operand_type}'. Expected 'number' or 'decimal'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"operand_type": operand_type},
+                )
+                return None
+            return "decimal"
+        
+        elif op == "length":
+            if operand_type not in ["text", "list"]:
+                self.error_handler.report_error(
+                    message=f"Unary operator 'length' not supported for type '{operand_type}'. Expected 'text' or 'list'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"operand_type": operand_type},
+                )
+                return None
+            return "number"
+        
+        elif op in ["first", "last"]:
+            is_list = isinstance(operand_type, str) and operand_type.startswith("list")
+            if operand_type != "text" and not is_list:
+                self.error_handler.report_error(
+                    message=f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'text' or 'list'.",
+                    error_type=TypeCheckError,
+                    node=node,
+                    details={"operand_type": operand_type},
+                )
+                return None
+            if operand_type == "text":
+                return "text"
+            else:
+                return operand_type[5:-1]
+            
+        else:
+            self.error_handler.report_error(
+                message=f"Unsupported unary operator '{op}'",
+                error_type=TypeCheckError,
+                node=node,
+                details={"operator": op},
+            )
+            return None
     
     def visit_AccessOp(self, node: ast.AccessOp) -> Optional[str]:
         target_type = node.target.accept(self)
@@ -611,7 +720,6 @@ class TypeChecker:
                     details={"target_type": target_type, "operation": op},
                 )
                 return None
-            
 
             if node.argument is not None:
                 arg_type = node.argument.accept(self)
