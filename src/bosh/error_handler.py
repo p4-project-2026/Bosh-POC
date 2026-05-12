@@ -1,9 +1,13 @@
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, Type
-from bosh.abstract_syntax import ast_nodes as ast
 from colorama import init, Fore, Style
 
 init(autoreset=True)
+
+class BoshTypeError(Exception):
+    pass
+class BoshRuntimeError(Exception):
+    pass
 
 @dataclass
 class Error:
