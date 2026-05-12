@@ -47,10 +47,15 @@ class SymbolTable(Generic[T]):
             match type_value:
                 case "number":
                     if self.table[name] is "decimal":
+                        self.table[name] = type_value
                         return # Allow number to be treated as decimal
                 case "decimal":
                     if self.table[name] is "number":
+                        self.table[name] = type_value
                         return # Allow decimal to be treated as number
+                case "any":
+                    self.table[name] = type_value
+                    return # Allow any to be treated as any other type
                 case _:
                     pass
             if self.table[name] != type_value:
@@ -88,10 +93,15 @@ class SymbolTable(Generic[T]):
             match type_value:
                 case "number":
                     if self.table[name] is "decimal":
-                        return True
+                        self.table[name] = type_value
+                        return # Allow number to be treated as decimal
                 case "decimal":
                     if self.table[name] is "number":
-                        return True
+                        self.table[name] = type_value
+                        return # Allow decimal to be treated as number
+                case "any":
+                    self.table[name] = type_value
+                    return # Allow any to be treated as any other type
                 case _:
                     pass
             if self.table[name] != type_value:
