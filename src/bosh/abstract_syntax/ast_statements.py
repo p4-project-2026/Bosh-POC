@@ -87,6 +87,9 @@ class RepeatUntil(ASTNode):
 class Quit(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return
+    
+    def execute(self, env: Environment) -> None:
+        raise SystemExit()
 
 
 @dataclass
@@ -127,3 +130,6 @@ class Return(ASTNode):
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return self.expression.check(v_table, f_table)
+    
+    def execute(self, env: Environment) -> Any:
+        return self.expression.execute(env)
