@@ -63,3 +63,11 @@ class Environment:
             return self.f_table.lookup(name)
         except Exception as e:
             raise Exception(f"Error looking up function '{name}': {e}")
+
+    def get_current_directory(self) -> str:
+        """Get the current directory for resolving file paths in import statements."""
+        return self.CD
+    
+    def set_current_directory(self, path: str):
+        """Set the current directory for resolving file paths in import statements."""
+        self.CD = path
