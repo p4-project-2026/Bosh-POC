@@ -240,7 +240,22 @@ class BinaryOp(ASTNode):
                     return self.left.execute(env) / self.right.execute(env)
                 case "mod":
                     return self.left.execute(env) % self.right.execute(env)
-                # Implement other operators as needed
+                case "eq":
+                    return self.left.execute(env) == self.right.execute(env)
+                case "neq":
+                    return self.left.execute(env) != self.right.execute(env)
+                case "or":
+                    return self.left.execute(env) or self.right.execute(env)
+                case "and":
+                    return self.left.execute(env) and self.right.execute(env)
+                case "lt":
+                    return self.left.execute(env) < self.right.execute(env)
+                case "gt":
+                    return self.left.execute(env) > self.right.execute(env)
+                case "lte":
+                    return self.left.execute(env) <= self.right.execute(env)
+                case "gte":
+                    return self.left.execute(env) >= self.right.execute(env)
                 case _:
                     raise BoshRuntimeError(f"Unsupported operator '{self.operator}'", self)
 
@@ -264,6 +279,17 @@ class UnaryOp(ASTNode):
             else:
                 raise BoshTypeError(f"Unary operator '{op}' not supported for type '{operand_type}'. Expected a list.", self)
 
+    def execute(self, env):
+        match self.operator:
+            case "-":
+                return -self.operand.execute(env)
+            case "not":
+                return not self.operand.execute(env)
+            case "plus":  # Unary plus, just returns the operand
+                return self.operand.execute(env)
+            
+            case _:
+                raise BoshRuntimeError(f"Unsupported unary operator '{self.operator}'", self)
 
 @dataclass
 class AccessOp(ASTNode):
