@@ -1,4 +1,5 @@
 from .ast_base import *
+from bosh.error_handler import BoshRuntimeError, BoshTypeError
 
 @dataclass
 class NumberLiteral(ASTNode):
@@ -6,6 +7,9 @@ class NumberLiteral(ASTNode):
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "number"
+    
+    def execute(self, env: Environment) -> float:
+        return self.value
 
 
 @dataclass
@@ -14,6 +18,9 @@ class DecimalLiteral(ASTNode):
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "decimal"
+    
+    def execute(self, env: Environment) -> float:
+        return self.value
 
 
 @dataclass
@@ -23,15 +30,27 @@ class StringLiteral(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "text"
 
+    def execute(self, env: Environment) -> str:
+        return self.value
+
 
 @dataclass
 class InterpolatedString(ASTNode):
     parts: List[ASTNode]
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        for part in self.parts:
+            if part.check(v_table, f_table) is None:
+                raise BoshTypeError("Undefined variable in interpolated string", self)
         return "text"
 
-
+    def execute(self, env: Environment) -> str:
+        result = ""
+        for part in self.parts:
+            value = part.execute(env)
+            result += str(value)
+        return result
+    
 @dataclass
 class BooleanLiteral(ASTNode):
     value: bool
@@ -39,11 +58,16 @@ class BooleanLiteral(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "boolean"
 
+    def execute(self, env: Environment) -> bool:
+        return self.value
+
 
 @dataclass
 class NullLiteral(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "null"
+    def execute(self, env: Environment) -> None:
+        return None
 
 
 @dataclass
@@ -60,6 +84,8 @@ class ListLiteral(ASTNode):
                 raise BoshTypeError(f"List elements must all be of the same type, expected {element_type}, got {elem_type}", self)
         return f"list<{element_type}>"
 
+    def execute(self, env: Environment) -> List[Any]:
+        return [elem.execute(env) for elem in self.elements]
 
 @dataclass
 class Identifier(ASTNode):
@@ -71,6 +97,33 @@ class Identifier(ASTNode):
         except Exception:
             raise BoshTypeError(f"Undefined variable '{self.name}'", self)
         return var_type
+
+    def execute(self, env: Environment) -> Any:
+        try:
+            value = env.lookup_variable(self.name)
+        except Exception:
+            raise BoshRuntimeError(f"Undefined variable '{self.name}'", self)
+        return value
+
+
+@dataclass
+class TaskIdentifier(ASTNode):
+    name: str
+    
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        try:
+            var_type = f_table.lookup(self.name) # Typechecker.py is different but I think this is correct. No var_type was defined
+        except Exception:
+            raise BoshTypeError(f"Undefined task '{self.name}'", self)
+        return var_type
+    
+    def execute(self, env: Environment) -> None:
+        try:
+            value = env.lookup_task(self.name)
+        except Exception:
+            raise BoshRuntimeError(f"Undefined task '{self.name}'", self)
+        return value
+        
 
 
 @dataclass
@@ -93,6 +146,34 @@ class TaskCall(ASTNode):
                 if arg_type != expected_type and expected_type != "any":
                     raise BoshTypeError(f"Argument {i+1} of task '{self.name}' expects type '{expected_type}', but got '{arg_type}'.", self)
         return signature.return_type
+
+    def execute(self, env: Environment) -> Any:
+        try:
+            task_func = env.enter_function_scope(self.name)
+        except Exception as e:
+            raise BoshRuntimeError(f"error executing task '{self.name}': {e}", self)
+        for i in range(len(task_func.parameters)):
+            try:
+                env.assign_variable(task_func.parameters[i], self.arguments[i].execute(env))
+            except Exception as e:
+                raise BoshRuntimeError(f"Error assigning argument {i+1} for task '{self.name}': {e}", self)
+        return_value = task_func.execute(env)
+        env.exit_function_scope()
+        return return_value
+
+    def execute(self, env: Environment) -> Any:
+        try:
+            task_func = env.enter_function_scope(self.name)
+        except Exception as e:
+            raise BoshRuntimeError(f"error executing task '{self.name}': {e}", self)
+        for i in range(len(task_func.parameters)):
+            try:
+                env.assign_variable(task_func.parameters[i], self.arguments[i].execute(env))
+            except Exception as e:
+                raise BoshRuntimeError(f"Error assigning argument {i+1} for task '{self.name}': {e}", self)
+        return_value = task_func.execute(env)
+        env.exit_function_scope()
+        return return_value
 
 
 @dataclass
@@ -147,6 +228,21 @@ class BinaryOp(ASTNode):
         else:
             raise BoshTypeError(f"Unsupported operator '{op}'", self)
 
+        def execute(self, env: Environment) -> Any:
+            match self.operator:
+                case "plus":
+                    return self.left.execute(env) + self.right.execute(env)
+                case "minus":
+                    return self.left.execute(env) - self.right.execute(env)
+                case "mult":
+                    return self.left.execute(env) * self.right.execute(env)
+                case "div":
+                    return self.left.execute(env) / self.right.execute(env)
+                case "mod":
+                    return self.left.execute(env) % self.right.execute(env)
+                # Implement other operators as needed
+                case _:
+                    raise BoshRuntimeError(f"Unsupported operator '{self.operator}'", self)
 
 @dataclass
 class UnaryOp(ASTNode):
