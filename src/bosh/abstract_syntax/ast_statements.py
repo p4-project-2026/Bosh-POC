@@ -4,7 +4,7 @@ from .ast_base import *
 class Print(ASTNode):
     expression: ASTNode
 
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         self.expression.check(v_table, f_table)
 
 
@@ -14,7 +14,7 @@ class IfElse(ASTNode):
     then_branch: Block
     else_branch: Optional[Block]
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         condition_type = self.condition.check(v_table, f_table)
         if condition_type != "boolean":
             raise BoshTypeError(f"Condition in if statement must be of type 'boolean', got '{condition_type}'", self)
@@ -55,7 +55,7 @@ class Fallback(ASTNode):
     primary_stmt: ASTNode
     fallback_stmt: ASTNode
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         self.primary_stmt.check(v_table, f_table)
         self.fallback_stmt.check(v_table, f_table)
 
@@ -71,14 +71,13 @@ class ForAll(ASTNode):
     iterable: ASTNode
     body: Block
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         iterable_type = self.iterable.check(v_table, f_table)
         if iterable_type is None:
             return
-        if iterable_type not in ["file", "folder", "text"] and not (iterable_type.startswith("list<") and iterable_type.endswith(">")):
-            raise BoshTypeError(f"Iterable in for all statement must be of type 'list', 'file', 'folder', or 'text', got '{iterable_type}'", self)
-        
-        element_type = iterable_type[5:-1] 
+        if iterable_type != "text" and not (iterable_type.startswith("list<") and iterable_type.endswith(">")):
+            raise BoshTypeError(f"Iterable in for all statement must be of type 'list' or 'text', got '{iterable_type}'", self)
+        element_type = iterable_type[5:-1] if iterable_type.startswith("list<") else "text"
         v_table.new_scope()
         try:
             v_table.bind(self.iterator_name, element_type)
@@ -111,7 +110,7 @@ class RepeatUntil(ASTNode):
     condition: ASTNode
     body: Block
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         condition_type = self.condition.check(v_table, f_table)
         if condition_type != "boolean":
             raise BoshTypeError(f"Condition in repeat until statement must be of type 'boolean', got '{condition_type}'", self)
@@ -130,7 +129,7 @@ class RepeatUntil(ASTNode):
 
 @dataclass
 class Quit(ASTNode):
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         return
     
     def execute(self, env: Environment) -> None:
@@ -142,7 +141,7 @@ class ListAdd(ASTNode):
     target: ASTNode
     item: ASTNode
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         target_type = self.target.check(v_table, f_table)
         self.item.check(v_table, f_table)
 

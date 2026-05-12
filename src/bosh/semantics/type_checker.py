@@ -1,7 +1,5 @@
 from typing import Any, Optional
 from bosh.abstract_syntax import *
-from xmlrpc.client import boolean
-import bosh.abstract_syntax.ast_nodes as ast
 from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
 from ..error_handler import ErrorHandler, TypeCheckError, BoshTypeError, BoshRuntimeError

@@ -20,8 +20,8 @@ block:  stmt (_SEP+ stmt)* _SEP*
                 | ("return") expr   -> return_
                 | "add" expr "to" expr -> add_to_list
                 | "remove" expr "from" expr -> remove_from_list
+                | "remove element" expr "from" expr -> remove_from_list_index
                 | IDENT "result" ("using" "(" expr ("," expr)* ")")? -> call_func
-
 
 
 ?def_stmt       : IDENT "is" expr -> assign
@@ -113,7 +113,7 @@ TYPE    : "text"
         | "date" 
         | "time" 
         | "list"
-        | "folder" 
+        | "folder"
         | "file"
 
 
@@ -130,6 +130,8 @@ str_chars: /([^"{\\]|\\.)+/
 interp: "{" expr "}"
 
 FLOAT: /[0-9]+\.[0-9]+/
+
+path: text ("/" text)*
 
 _BLOCKSTART: "{"
 _BLOCKEND: "}" 

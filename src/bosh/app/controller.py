@@ -30,5 +30,5 @@ def controller(bosh_file_path):
     #print("Analyzed.")
 
     vprint("Executing...")
-    Executor().evaluate(ast)
+    Executor().execute(ast)
     #print("Done.")

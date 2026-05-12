@@ -9,7 +9,7 @@ class Assign(ASTNode):
     target: Identifier
     value: ASTNode
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         value_type = self.value.check(v_table, f_table)
 
         if value_type is None:
@@ -35,7 +35,7 @@ class AssignType(ASTNode):
     var_type: str
     value: Optional[ASTNode]
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         value_type = self.value.check(v_table, f_table) if self.value else None
         if value_type and value_type != self.var_type:
             raise BoshTypeError(f"Cannot assign value of type '{value_type}' to variable '{self.target.name}' of type '{self.var_type}'", self)
@@ -58,7 +58,7 @@ class TaskDecl(ASTNode):
     parameters: List[str]
     body: Block
     
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         param_types = {param: "any" for param in self.parameters}
         signature = FunctionSignature(parameters=param_types, return_type="any")
 
