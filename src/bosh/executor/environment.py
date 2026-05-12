@@ -1,16 +1,16 @@
-import os
 from typing import Optional
 from bosh.executor.scope_stack2 import ScopeStack2
 from bosh.executor.store import Store
 from bosh.executor.table import Table
 from bosh.executor.function_binding import FunctionBinding
 from bosh.executor.var_table import VarTable
+from pathlib import Path
 class Environment:
     def __init__(self):
-        self.v_table = ScopeStack2()
+        self.v_table = ScopeStack2[int](VarTable)
         self.f_table = Table[FunctionBinding]()
         self.store = Store()
-        self.CD: str = os.getcwd()  # Current Directory, used for resolving file paths in import statements
+        self.CD: str = str(Path.cwd())  # Current Directory, used for resolving file paths in import statements
 
     def new_scope(self):
         """Create a new variable scope."""
@@ -63,3 +63,11 @@ class Environment:
             return self.f_table.lookup(name)
         except Exception as e:
             raise Exception(f"Error looking up function '{name}': {e}")
+
+    def get_current_directory(self) -> str:
+        """Get the current directory for resolving file paths in import statements."""
+        return self.CD
+    
+    def set_current_directory(self, path: str):
+        """Set the current directory for resolving file paths in import statements."""
+        self.CD = path

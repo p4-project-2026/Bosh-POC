@@ -156,6 +156,17 @@ class ListLookup(ASTNode):
         if index_type != "number":
             raise BoshTypeError(f"List index must be of type 'number', got '{index_type}'", self)
         return target_type[5:-1]
+    
+    def execute(self, env: Environment) -> Any:
+        try:
+            target_value = self.target.execute(env)
+        except Exception as e:
+            raise BoshRuntimeError(f"Error executing list lookup: {e}", self)
+        index_value = self.index.execute(env)
+        try:
+            return target_value[int(index_value)]
+        except Exception as e:
+            raise BoshRuntimeError(f"Error executing list lookup: {e}", self)
 
 @dataclass
 class Unit(ASTNode):
@@ -168,6 +179,25 @@ class Unit(ASTNode):
             raise BoshTypeError(f"Cannot apply unit '{self.unit_type}' to type '{target_type}'. Expected number or decimal.", self)
         return "time"
 
+    def execute(self, env: Environment) -> Any:
+        target_value = self.target.execute(env)
+        match self.unit_type:
+            case "seconds":
+                return target_value * 1000  # Convert seconds to milliseconds
+            case "minutes":
+                return target_value * 60 * 1000  # Convert minutes to milliseconds
+            case "hours":
+                return target_value * 60 * 60 * 1000  # Convert hours to milliseconds
+            case "days":
+                return target_value * 24 * 60 * 60 * 1000  # Convert days to milliseconds
+            case "weeks":
+                return target_value * 7 * 24 * 60 * 60 * 1000  # Convert weeks to milliseconds
+            case "months":
+                return target_value * 30 * 24 * 60 * 60 * 1000  # Approximate conversion of months to milliseconds
+            case "years":
+                return target_value * 365 * 24 * 60 * 60 * 1000  # Approximate conversion of years to milliseconds
+            case _:
+                raise BoshRuntimeError(f"Unsupported unit type '{self.unit_type}'", self)
 
 @dataclass
 class BinaryOp(ASTNode):
@@ -294,11 +324,24 @@ class UnaryOp(ASTNode):
             raise BoshTypeError(f"Unsupported unary operator '{op}'", self)
 
     def execute(self, env):
+        import math
         match self.operator:
             case "-":
                 return -self.operand.execute(env)
             case "not":
                 return not self.operand.execute(env)
+            case "first":
+                return self.operand.execute(env)[0]
+            case "last":
+                return self.operand.execute(env)[-1]
+            case "floor":
+                return math.floor(self.operand.execute(env))
+            case "ceiling":
+                return math.ceil(self.operand.execute(env))
+            case "exponent":
+                return math.exp(self.operand.execute(env))
+            case "round":
+                return int(round(self.operand.execute(env)))
             case _:
                 raise BoshRuntimeError(f"Unsupported unary operator '{self.operator}'", self)
 

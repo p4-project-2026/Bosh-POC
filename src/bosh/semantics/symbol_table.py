@@ -90,18 +90,22 @@ class SymbolTable(Generic[T]):
  
     def update(self, name: str, type_value: T) -> bool:
         if name in self.table:
-            match type_value:
+            match self.table[name]:
                 case "number":
-                    if self.table[name] is "decimal":
+                    if type_value is "decimal":
                         self.table[name] = type_value
                         return # Allow number to be treated as decimal
                 case "decimal":
-                    if self.table[name] is "number":
+                    if type_value is "number":
                         self.table[name] = type_value
                         return # Allow decimal to be treated as number
                 case "any":
                     self.table[name] = type_value
                     return # Allow any to be treated as any other type
+                case "list<any>":
+                    if type_value.startswith("list<") or not type_value.endswith(">"):
+                        self.table[name] = type_value
+                        return # Allow list<any> to be treated as any other list type
                 case _:
                     pass
             if self.table[name] != type_value:
