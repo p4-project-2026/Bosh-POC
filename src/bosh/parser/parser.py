@@ -111,6 +111,9 @@ class BoshTransformer(Transformer):
             var_type = "list<any>"
             value = ListLiteral(elements=[])
 
+        if var_type in ["folder", "file"]:
+            var_type = "text"
+
         node = AssignType(target=target_node, var_type=var_type, value=value)
         node.set_meta(meta, self._filename)
         return node
@@ -136,12 +139,12 @@ class BoshTransformer(Transformer):
     def make(self, meta, args):
         entity_type = str(args[0])
         location = args[2] if len(args) > 2 else None
-        node = Make(entity_type=entity_type, name=str(args[1]), location=location)
+        node = Make(entity_type=entity_type, name=args[1], location=location)
         node.set_meta(meta, self._filename)
         return node
 
     def rename(self, meta, args):
-        node = Rename(target=args[0], new_name=str(args[1]))
+        node = Rename(target=args[0], new_name=args[1])
         node.set_meta(meta, self._filename)
         return node
 
@@ -160,12 +163,12 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
-    def read_file(self, meta, args):
+    def read(self, meta, args):
         node = Read(source=args[0])
         node.set_meta(meta, self._filename)
         return node
 
-    def write_file(self, meta, args):
+    def write(self, meta, args):
         node = Write(target=args[1], data=args[0])
         node.set_meta(meta, self._filename)
         return node
@@ -349,9 +352,6 @@ class BoshTransformer(Transformer):
         name = str(args[0])
         arguments = args[1:] if len(args) > 1 else []
         node = TaskCall(name=name, arguments=arguments)
-        target = args[0]
-
-        node = TaskCall(name=target, arguments=arguments)
         node.set_meta(meta, self._filename)
         return node
 
@@ -360,7 +360,6 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
         
-
     def decimal(self, meta, args):
         node = DecimalLiteral(value=float(args[0]))
         node.set_meta(meta, self._filename)
@@ -400,16 +399,16 @@ class BoshTransformer(Transformer):
         node.set_meta(meta, self._filename)
         return node
 
+    def path(self, meta, args):
+        full_path = "/".join([arg.value for arg in args])
+        node = StringLiteral(value=full_path)
+        node.set_meta(meta, self._filename)
+        return node
+
     def list(self, meta, args):
         node = ListLiteral(elements=args)
         node.set_meta(meta, self._filename)
         return node
-    
-    def file(self, meta, args):
-        return "file"
-    
-    def folder(self, meta, args):
-        return "folder"
 
     def now(self, meta, args):
         node = AccessOp(target=None, operation="now")
@@ -441,3 +440,8 @@ class BoshTransformer(Transformer):
 
     def year(self, meta, args):
         return "year"
+    
+    def TYPE(self, token):
+        if token.value in ["file", "folder"]:
+            return "text"
+        return token.value

@@ -10,7 +10,8 @@ class Executor:
     # evaluate
     def execute(self, node: Program):
         try:
-            node.execute(self.environment)
+            # node.execute(self.environment)
+            pass
         except BoshRuntimeError as e:
             self.error_handler.report_error(
                 message=e.message,
@@ -226,3 +227,4 @@ class Executor:
     
     def visit_AccessOp(self, node: ast.AccessOp):
         return None
+"""

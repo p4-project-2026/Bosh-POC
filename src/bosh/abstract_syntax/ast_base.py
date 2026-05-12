@@ -23,7 +23,7 @@ class ASTNode():
                 filename=filename
             )
 
-    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+    def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> None:
         raise BoshTypeError(self.__class__.__name__ + " does not implement check()", self)
     
     def execute(self, env: Environment) -> Any:
