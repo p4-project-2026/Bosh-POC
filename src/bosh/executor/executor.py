@@ -64,7 +64,7 @@ class Executor:
     def visit_IfElse(self, node: IfElse):
         condition_value = node.condition.accept(self)
         if condition_value:
-            return node.if_branch.accept(self)
+            return node.then_branch.accept(self)
         elif node.else_branch:
             return node.else_branch.accept(self)
         return None
@@ -131,6 +131,12 @@ class Executor:
     
     def visit_Write(self, node: Write):
         #TODO: Implement Write statement
+        return None
+    def visit_Execute(self, node: ast.Execute):
+        return None
+    def visit_Pause(self, node: ast.Pause):
+        return None
+    def visit_Wait(self, node: ast.Wait):
         return None
 
 # Literals and Identifiers ----------------------------------------    
@@ -217,5 +223,6 @@ class Executor:
             return not operand_value
         else:
             raise ValueError(f"Unsupported unary operator: {node.operator}")
-        
-"""
+    
+    def visit_AccessOp(self, node: ast.AccessOp):
+        return None
