@@ -20,7 +20,7 @@ class Make(ASTNode):
         if self.entity_type not in ["file", "folder"]:
             raise BoshTypeError(f"Entity type in make statement must be of type 'file' or 'folder', got '{self.entity_type}'", self)
 
-        location_type = self.location.check(v_table, f_table)
+        location_type = self.location.check(v_table, f_table) if self.location else "folder"
         if location_type not in ["text", "folder"]:
             raise BoshTypeError(f"Path in make statement must be of type 'text' or 'folder', got '{location_type}'", self)
 
@@ -106,7 +106,7 @@ class Write(ASTNode):
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         target_type = self.target.check(v_table, f_table)
-        self.content.check(v_table, f_table)
+        # self.content.check(v_table, f_table)
         if target_type not in ["file", "text"]:
             raise BoshTypeError(f"Cannot write to type '{target_type}'. Expected file or text.", self)
 

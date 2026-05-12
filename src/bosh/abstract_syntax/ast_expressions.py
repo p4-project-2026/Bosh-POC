@@ -28,7 +28,7 @@ class StringLiteral(ASTNode):
     value: str
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        return "string"
+        return "text"
 
     def execute(self, env: Environment) -> str:
         return self.value
@@ -42,7 +42,7 @@ class InterpolatedString(ASTNode):
         for part in self.parts:
             if part.check(v_table, f_table) is None:
                 raise BoshTypeError("Undefined variable in interpolated string", self)
-        return "string"
+        return "text"
 
     def execute(self, env: Environment) -> str:
         result = ""
@@ -64,7 +64,6 @@ class BooleanLiteral(ASTNode):
 
 @dataclass
 class NullLiteral(ASTNode):
-    
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return "null"
     def execute(self, env: Environment) -> None:
@@ -106,6 +105,7 @@ class Identifier(ASTNode):
             raise BoshRuntimeError(f"Undefined variable '{self.name}'", self)
         return value
 
+
 @dataclass
 class TaskIdentifier(ASTNode):
     name: str
@@ -140,11 +140,26 @@ class TaskCall(ASTNode):
         if len(self.arguments) != len(signature.param_types):
             raise BoshTypeError(f"Task '{self.name}' expects {len(signature.param_types)} arguments, but {len(self.arguments)} were provided.", self)
         for i, arg in enumerate(self.arguments):
-            if i < len(signature.param_types): 
+            if i < len(signature.param_types):
                 arg_type = arg.check(v_table, f_table)
-                expected_type = signature.param_types[i]
-                if arg_type != expected_type:
-                    raise BoshTypeError(f"Argument {i+1} of task '{self.name}' expects type '{expected_type}', but got '{arg_type}'.", self)                
+                expected_type = signature.param_types[signature.param[i]]
+                if arg_type != expected_type and expected_type != "any":
+                    raise BoshTypeError(f"Argument {i+1} of task '{self.name}' expects type '{expected_type}', but got '{arg_type}'.", self)
+        return signature.return_type
+
+    def execute(self, env: Environment) -> Any:
+        try:
+            task_func = env.enter_function_scope(self.name)
+        except Exception as e:
+            raise BoshRuntimeError(f"error executing task '{self.name}': {e}", self)
+        for i in range(len(task_func.parameters)):
+            try:
+                env.assign_variable(task_func.parameters[i], self.arguments[i].execute(env))
+            except Exception as e:
+                raise BoshRuntimeError(f"Error assigning argument {i+1} for task '{self.name}': {e}", self)
+        return_value = task_func.execute(env)
+        env.exit_function_scope()
+        return return_value
 
     def execute(self, env: Environment) -> Any:
         try:
@@ -178,16 +193,13 @@ class ListLookup(ASTNode):
 @dataclass
 class Unit(ASTNode):
     target: ASTNode
-    unit_type: str  # e.g., "second", "minute", "meter"
+    unit_type: str
 
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        # A unit modifier usually applies to a number or decimal
         target_type = self.target.check(v_table, f_table)
         if target_type not in ["number", "decimal"]:
             raise BoshTypeError(f"Cannot apply unit '{self.unit_type}' to type '{target_type}'. Expected number or decimal.", self)
         
-        # Depending on your type system, this might return a custom type 
-        # like "time_duration" or "measurement". For now, we return the string.
         return f"{target_type}_{self.unit_type}"
 
 
@@ -203,16 +215,16 @@ class BinaryOp(ASTNode):
         op = self.operator
 
         if op in ["plus", "minus", "div", "mult", "mod"]:
-            if left_type in ["int", "decimal"] and right_type in ["int", "decimal"]:
+            if left_type in ["int", "decimal"] and right_type in ["int", "decimal"] or left_type == right_type == "any":
                 return left_type
             else:
                 raise BoshTypeError(f"Operator '{op}' not supported for types '{left_type}' and '{right_type}'", self)
         elif op in ["eq", "neq"]:
-            pass #MISSING
+            return "boolean"
         elif op in ["or", "and"]:
-            pass #MISSING
+            return "boolean"
         elif op in ["lt", "gt", "gte", "lte"]:
-            pass #MISSING
+            return "boolean"
         else:
             raise BoshTypeError(f"Unsupported operator '{op}'", self)
 
@@ -261,6 +273,11 @@ class UnaryOp(ASTNode):
         elif op == "not":
             if operand_type != "boolean":
                 raise BoshTypeError(f"Unary operator '{op}' not supported for type '{operand_type}'. Expected 'boolean'.", self)
+        elif op == "first":
+            if operand_type.startswith("list"):
+                return operand_type[5:-1]  # Extract the element type from "list<element_type>"
+            else:
+                raise BoshTypeError(f"Unary operator '{op}' not supported for type '{operand_type}'. Expected a list.", self)
 
     def execute(self, env):
         match self.operator:
@@ -281,4 +298,13 @@ class AccessOp(ASTNode):
     argument: Optional[ASTNode] = None
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        pass #MISSING
+        op = self.operation
+        if op == "ends_with":
+            return "boolean"
+        elif op == "here":
+            return "folder"
+        elif op == "now":
+            return "time"
+        else:
+            raise BoshTypeError(f"Unsupported access operation '{op}'", self)
+        

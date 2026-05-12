@@ -36,7 +36,7 @@ class AssignType(ASTNode):
     value: Optional[ASTNode]
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        value_type = self.value.check(v_table, f_table)
+        value_type = self.value.check(v_table, f_table) if self.value else None
         if value_type and value_type != self.var_type:
             raise BoshTypeError(f"Cannot assign value of type '{value_type}' to variable '{self.target.name}' of type '{self.var_type}'", self)
 
@@ -44,7 +44,7 @@ class AssignType(ASTNode):
             v_table.bind(self.target.name, self.var_type)
         except Exception as e:
             raise BoshTypeError(str(e), self)
-        
+            
     def execute(self, env: Environment) -> None:
         try:
             env.assign_variable(self.target.execute(env), self.value.execute(env) if self.value else None)
@@ -59,11 +59,11 @@ class TaskDecl(ASTNode):
     body: Block
     
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
-        param_types = ["any"] * len(self.parameters)
-        signature = FunctionSignature(param_types=param_types, return_type="any") #SOMETHING WRONG HERE
+        param_types = {param: "any" for param in self.parameters}
+        signature = FunctionSignature(param=param_types, return_type="any")
 
         try:
-            self.f_table.bind(self.name, signature)
+            f_table.bind(self.name, signature)
         except:
             raise BoshTypeError(f"Task '{self.name}' is already defined.", self)
         
@@ -79,7 +79,7 @@ class TaskDecl(ASTNode):
             try:
                 v_table.exit_scope()
             except Exception as e:
-                raise BoshTypeError(str(e), self)    
+                raise BoshTypeError(str(e), self)
             
     def execute(self, env: Environment) -> None:
         # Create a snapshot of the current variable scope stack to capture the environment for the function

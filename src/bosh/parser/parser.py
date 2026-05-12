@@ -1,6 +1,6 @@
 from lark import Lark, Transformer, v_args
 from lark.exceptions import UnexpectedInput, UnexpectedToken, UnexpectedCharacters
-from bosh.abstract_syntax import *
+from bosh.abstract_syntax.__init__ import *
 from colorama import Fore, Style
 
 def parseBosh(processed_code):
@@ -106,18 +106,22 @@ class BoshTransformer(Transformer):
         target_node = Identifier(name=str(args[0]))
         var_type = str(args[1])
         value = args[2] if len(args) > 2 else None
+        
+        if var_type == "list" and value is None:
+            var_type = "list<any>"
+            value = ListLiteral(elements=[])
+
         node = AssignType(target=target_node, var_type=var_type, value=value)
         node.set_meta(meta, self._filename)
         return node
 
     def assign_func(self, meta, args):
-        target_node = Identifier(name=str(args[0]))
-        parameters = [Identifier(name=str(p)) for p in args[1:-1]]
+        parameters = [str(param) for param in args[1:-1]]
         body = args[-1]
-        node = TaskDecl(name=target_node, parameters=parameters, body=body)
+        node = TaskDecl(name=str(args[0]), parameters=parameters, body=body)
         node.set_meta(meta, self._filename)
         return node
-
+    
     # DOMAIN-SPECIFIC STATEMENTS ----------------------------------------
     def go_to(self, meta, args):
         node = GoTo(path=args[0])
@@ -132,12 +136,12 @@ class BoshTransformer(Transformer):
     def make(self, meta, args):
         entity_type = str(args[0])
         location = args[2] if len(args) > 2 else None
-        node = Make(entity_type=entity_type, name=args[1], location=location)
+        node = Make(entity_type=entity_type, name=str(args[1]), location=location)
         node.set_meta(meta, self._filename)
         return node
 
     def rename(self, meta, args):
-        node = Rename(target=args[0], new_name=args[1])
+        node = Rename(target=args[0], new_name=str(args[1]))
         node.set_meta(meta, self._filename)
         return node
 
@@ -393,6 +397,12 @@ class BoshTransformer(Transformer):
         node = ListLiteral(elements=args)
         node.set_meta(meta, self._filename)
         return node
+    
+    def file(self, meta, args):
+        return "file"
+    
+    def folder(self, meta, args):
+        return "folder"
 
     def now(self, meta, args):
         node = AccessOp(target=None, operation="now")
