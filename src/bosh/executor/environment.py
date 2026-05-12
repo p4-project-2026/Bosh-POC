@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from bosh.executor.scope_stack2 import ScopeStack2
 from bosh.executor.store import Store
@@ -9,6 +10,7 @@ class Environment:
         self.v_table = ScopeStack2()
         self.f_table = Table[FunctionBinding]()
         self.store = Store()
+        self.CD: str = os.getcwd()  # Current Directory, used for resolving file paths in import statements
 
     def new_scope(self):
         """Create a new variable scope."""
