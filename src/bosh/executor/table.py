@@ -1,10 +1,10 @@
-from typing import Dict, Generic, TypeVar
+from typing import Dict, Generic, Optional, TypeVar
 
 T = TypeVar('T')
 
 class Table(Generic[T]):
-    def __init__(self, function_scope: bool = False):
-        self.table: Dict[str, T] = {}
+    def __init__(self, function_scope: bool = False, table: Optional[Dict[str, T]] = None):
+        self.table: Dict[str, T] = {} if table is None else table.copy()
         self.function_scope: bool = function_scope
 
     def bind(self, name: str, value: T):
@@ -22,3 +22,12 @@ class Table(Generic[T]):
     
     def domain(self) -> list[str]:
         return list(self.table.keys())
+    
+    def get_snapshot(self) -> Dict[str, T]:
+        return self.table.copy()
+    
+    def copy(self, function_scope: Optional[bool] = None):
+        return self.__class__(
+            function_scope=self.function_scope if function_scope is None else function_scope,
+            table=self.get_snapshot()
+        )
