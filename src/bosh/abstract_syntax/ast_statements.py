@@ -55,9 +55,9 @@ class ForAll(ASTNode):
         iterable_type = self.iterable.check(v_table, f_table)
         if iterable_type is None:
             return
-        if not iterable_type.startswith("list<") and iterable_type.endswith(">"):
-            raise BoshTypeError(f"Iterable in for all statement must be of type 'list', got '{iterable_type}'", self)
-
+        if iterable_type not in ["file", "folder", "text"] and not (iterable_type.startswith("list<") and iterable_type.endswith(">")):
+            raise BoshTypeError(f"Iterable in for all statement must be of type 'list', 'file', 'folder', or 'text', got '{iterable_type}'", self)
+        
         element_type = iterable_type[5:-1] 
         v_table.new_scope()
         try:
@@ -70,7 +70,7 @@ class ForAll(ASTNode):
                 v_table.exit_scope()
             except Exception as e:
                 raise BoshTypeError(str(e), self)
-
+        
 
 @dataclass
 class RepeatUntil(ASTNode):
@@ -85,7 +85,6 @@ class RepeatUntil(ASTNode):
 
 @dataclass
 class Quit(ASTNode):
-    
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         return
 
@@ -98,8 +97,16 @@ class ListAdd(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         target_type = self.target.check(v_table, f_table)
         self.item.check(v_table, f_table)
-        if target_type != "list" and target_type != "any":
+
+        if not target_type.startswith("list<") or not target_type.endswith(">"):
             raise BoshTypeError(f"Cannot add to type '{target_type}'. Can only add to lists.", self)
+        
+        if target_type == "list<any>":
+            item_type = self.item.check(v_table, f_table)
+            try:
+                v_table.bind(self.target.name, f"list<{item_type}>")
+            except Exception as e:
+                raise BoshTypeError(str(e), self)
 
 
 @dataclass
@@ -110,7 +117,7 @@ class ListRemove(ASTNode):
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
         target_type = self.target.check(v_table, f_table)
         self.item.check(v_table, f_table)
-        if target_type != "list" and target_type != "any":
+        if not target_type.startswith("list<") or not target_type.endswith(">"):
             raise BoshTypeError(f"Cannot remove from type '{target_type}'. Can only remove from lists.", self)
 
 

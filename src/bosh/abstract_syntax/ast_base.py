@@ -47,9 +47,15 @@ class Block(ASTNode):
     statements: List[ASTNode]
 
     def check(self, v_table: ScopeStack[str], f_table: FuncTable) -> Optional[str]:
+        return_type = None
         for stmt in self.statements:
-            stmt.check(v_table, f_table)
-    
+            stmt_return_type = stmt.check(v_table, f_table)
+            if stmt_return_type is not None:
+                if return_type is not None and stmt_return_type != return_type:
+                    raise BoshTypeError(f"All statements in a block must return the same type, but got '{return_type}' and '{stmt_return_type}'", self)
+                return_type = stmt_return_type
+        return return_type
+
     def execute(self, env: Environment) -> Any:
         for stmt in self.statements:
             stmt.execute(env)
