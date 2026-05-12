@@ -188,6 +188,16 @@ class ListLookup(ASTNode):
         if index_type != "number":
             raise BoshTypeError(f"List index must be of type 'number', got '{index_type}'", self)
         
+    def execute(self, env: Environment) -> Any:
+        try:
+            target_value = self.target.execute(env)
+        except Exception as e:
+            raise BoshRuntimeError(f"Error executing list lookup: {e}", self)
+        index_value = self.index.execute(env)
+        try:
+            return target_value[int(index_value)]
+        except Exception as e:
+            raise BoshRuntimeError(f"Error executing list lookup: {e}", self)
 
 @dataclass
 class Unit(ASTNode):
@@ -201,6 +211,26 @@ class Unit(ASTNode):
         
         return f"{target_type}_{self.unit_type}"
 
+    def execute(self, env: Environment) -> Any:
+
+        target_value = self.target.execute(env)
+        match self.unit_type:
+            case "seconds":
+                return target_value * 1000  # Convert seconds to milliseconds
+            case "minutes":
+                return target_value * 60 * 1000  # Convert minutes to milliseconds
+            case "hours":
+                return target_value * 60 * 60 * 1000  # Convert hours to milliseconds
+            case "days":
+                return target_value * 24 * 60 * 60 * 1000  # Convert days to milliseconds
+            case "weeks":
+                return target_value * 7 * 24 * 60 * 60 * 1000  # Convert weeks to milliseconds
+            case "months":
+                return target_value * 30 * 24 * 60 * 60 * 1000  # Approximate conversion of months to milliseconds
+            case "years":
+                return target_value * 365 * 24 * 60 * 60 * 1000  # Approximate conversion of years to milliseconds
+            case _:
+                raise BoshRuntimeError(f"Unsupported unit type '{self.unit_type}'", self)
 
 @dataclass
 class BinaryOp(ASTNode):
@@ -227,36 +257,36 @@ class BinaryOp(ASTNode):
         else:
             raise BoshTypeError(f"Unsupported operator '{op}'", self)
 
-        def execute(self, env: Environment) -> Any:
-            match self.operator:
-                case "plus":
-                    return self.left.execute(env) + self.right.execute(env)
-                case "minus":
-                    return self.left.execute(env) - self.right.execute(env)
-                case "mult":
-                    return self.left.execute(env) * self.right.execute(env)
-                case "div":
-                    return self.left.execute(env) / self.right.execute(env)
-                case "mod":
-                    return self.left.execute(env) % self.right.execute(env)
-                case "eq":
-                    return self.left.execute(env) == self.right.execute(env)
-                case "neq":
-                    return self.left.execute(env) != self.right.execute(env)
-                case "or":
-                    return self.left.execute(env) or self.right.execute(env)
-                case "and":
-                    return self.left.execute(env) and self.right.execute(env)
-                case "lt":
-                    return self.left.execute(env) < self.right.execute(env)
-                case "gt":
-                    return self.left.execute(env) > self.right.execute(env)
-                case "lte":
-                    return self.left.execute(env) <= self.right.execute(env)
-                case "gte":
-                    return self.left.execute(env) >= self.right.execute(env)
-                case _:
-                    raise BoshRuntimeError(f"Unsupported operator '{self.operator}'", self)
+    def execute(self, env: Environment) -> Any:
+        match self.operator:
+            case "plus":
+                return self.left.execute(env) + self.right.execute(env)
+            case "minus":
+                return self.left.execute(env) - self.right.execute(env)
+            case "mult":
+                return self.left.execute(env) * self.right.execute(env)
+            case "div":
+                return self.left.execute(env) / self.right.execute(env)
+            case "mod":
+                return self.left.execute(env) % self.right.execute(env)
+            case "eq":
+                return self.left.execute(env) == self.right.execute(env)
+            case "neq":
+                return self.left.execute(env) != self.right.execute(env)
+            case "or":
+                return self.left.execute(env) or self.right.execute(env)
+            case "and":
+                return self.left.execute(env) and self.right.execute(env)
+            case "lt":
+                return self.left.execute(env) < self.right.execute(env)
+            case "gt":
+                return self.left.execute(env) > self.right.execute(env)
+            case "lte":
+                return self.left.execute(env) <= self.right.execute(env)
+            case "gte":
+                return self.left.execute(env) >= self.right.execute(env)
+            case _:
+                raise BoshRuntimeError(f"Unsupported operator '{self.operator}'", self)
 
 @dataclass
 class UnaryOp(ASTNode):
@@ -279,14 +309,24 @@ class UnaryOp(ASTNode):
                 raise BoshTypeError(f"Unary operator '{op}' not supported for type '{operand_type}'. Expected a list.", self)
 
     def execute(self, env):
+        import math
         match self.operator:
             case "-":
                 return -self.operand.execute(env)
             case "not":
                 return not self.operand.execute(env)
-            case "plus":  # Unary plus, just returns the operand
-                return self.operand.execute(env)
-            
+            case "first":
+                return self.operand.execute(env)[0]
+            case "last":
+                return self.operand.execute(env)[-1]
+            case "floor":
+                return math.floor(self.operand.execute(env))
+            case "ceiling":
+                return math.ceil(self.operand.execute(env))
+            case "exponent":
+                return math.exp(self.operand.execute(env))
+            case "round":
+                return int(round(self.operand.execute(env)))
             case _:
                 raise BoshRuntimeError(f"Unsupported unary operator '{self.operator}'", self)
 
