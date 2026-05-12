@@ -2,7 +2,7 @@ from typing import Any, Optional
 from bosh.abstract_syntax import *
 from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
-from ..error_handler import ErrorHandler, TypeCheckError, BoshTypeError
+from ..error_handler import ErrorHandler, TypeCheckError, BoshTypeError, BoshRuntimeError
 from .FuncTable import FuncTable, FunctionSignature
 
 class TypeChecker:
