@@ -4,10 +4,11 @@ from .symbol_table import SymbolTable
 from .ScopeStack import ScopeStack
 from ..error_handler import ErrorHandler, TypeCheckError, BoshTypeError, BoshRuntimeError
 from .FuncTable import FuncTable, FunctionSignature
+from .symbol_table_scope_stacker import SymbolTableScopeStacker
 
 class TypeChecker:
     def __init__(self):
-        self.v_table = ScopeStack[str]()
+        self.v_table = SymbolTableScopeStacker()
         self.f_table = FuncTable()
         self.error_handler = ErrorHandler()
 
