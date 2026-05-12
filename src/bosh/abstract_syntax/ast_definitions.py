@@ -1,4 +1,8 @@
 from .ast_base import *
+from bosh.error_handler import BoshTypeError, BoshRuntimeError
+from bosh.executor.function_binding import FunctionBinding
+from bosh.executor.environment import Environment
+from bosh.abstract_syntax.ast_expressions import Identifier
 
 @dataclass
 class Assign(ASTNode):
